@@ -219,10 +219,10 @@ export const AvailabilityCalendar = () => {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6">
         {/* Calendar */}
         <div className="lg:col-span-2">
-          <Card className="p-6 shadow-card">
+          <Card className="p-4 lg:p-6 shadow-card border-0 lg:border">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold">
                 Select Your Stay
@@ -244,50 +244,41 @@ export const AvailabilityCalendar = () => {
               onSelect={handleSelect}
               month={currentMonth}
               onMonthChange={setCurrentMonth}
-              numberOfMonths={2}
+              numberOfMonths={window.innerWidth < 1024 ? 1 : 2}
               disabled={isDateDisabled}
-              className="w-full"
+              className="w-full pointer-events-auto"
               classNames={{
-                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                day_range_middle: "bg-primary/20 text-primary",
-                day_range_end: "bg-primary text-primary-foreground",
-                day_range_start: "bg-primary text-primary-foreground",
-                day_disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
-                day_outside: "text-muted-foreground opacity-50",
+                months: "flex flex-col lg:flex-row space-y-4 lg:space-x-4 lg:space-y-0",
+                month: "space-y-4 w-full",
+                caption: "flex justify-center pt-1 relative items-center mb-4",
+                caption_label: "text-lg font-semibold",
+                nav: "space-x-1 flex items-center",
+                nav_button: "h-8 w-8 bg-transparent p-0 opacity-70 hover:opacity-100 hover:bg-primary/10 rounded-full transition-all",
+                nav_button_previous: "absolute left-1",
+                nav_button_next: "absolute right-1",
+                table: "w-full border-collapse",
+                head_row: "flex mb-2",
+                head_cell: "text-muted-foreground rounded-md w-full font-medium text-xs uppercase tracking-wider flex-1 text-center py-2",
+                row: "flex w-full",
+                cell: "relative flex-1 text-center text-sm p-1 focus-within:relative focus-within:z-20",
+                day: "h-12 w-full p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-primary/10 transition-all duration-200 flex flex-col items-center justify-center gap-1",
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground font-semibold",
+                day_range_middle: "bg-primary/15 text-primary font-medium rounded-none",
+                day_range_end: "bg-primary text-primary-foreground font-semibold rounded-r-lg",
+                day_range_start: "bg-primary text-primary-foreground font-semibold rounded-l-lg",
+                day_today: "bg-accent text-accent-foreground font-semibold border border-primary/30",
+                day_disabled: "text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent",
+                day_outside: "text-muted-foreground opacity-40",
               }}
-              components={{
-                Day: ({ date, ...props }) => {
-                  const availability = getAvailabilityForDate(date);
-                  const isSelected = selectedRange?.from && isSameDay(date, selectedRange.from) ||
-                                   selectedRange?.to && isSameDay(date, selectedRange.to);
-                  const inRange = selectedRange?.from && selectedRange?.to && 
-                                 date >= selectedRange.from && date <= selectedRange.to;
-                  
-                  return (
-                    <div
-                      className={`
-                        relative p-2 text-center cursor-pointer transition-all duration-200 min-h-[50px] flex flex-col justify-between rounded-md
-                        ${!availability?.available ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' : ''}
-                        ${isSelected ? 'bg-primary text-primary-foreground' : ''}
-                        ${inRange && !isSelected ? 'bg-primary/20' : ''}
-                        ${availability?.available && !isSelected && !inRange ? 'hover:bg-primary/10' : ''}
-                      `}
-                      {...props}
-                    >
-                      <span className="text-sm font-medium">{date.getDate()}</span>
-                      {availability?.available && availability.price && (
-                        <div className="text-xs">
-                          <div className="font-bold">${availability.price}</div>
-                          {availability.minimum_stay && availability.minimum_stay > 1 && (
-                            <Badge variant="secondary" className="text-[8px] px-1 py-0">
-                              {availability.minimum_stay}n min
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
+              modifiers={{
+                available: (date) => isDateAvailable(date),
+                unavailable: (date) => !isDateAvailable(date),
+                booked: (date) => !isDateAvailable(date)
+              }}
+              modifiersClassNames={{
+                available: "hover:bg-primary/10 transition-colors",
+                unavailable: "opacity-50 cursor-not-allowed line-through",
+                booked: "bg-muted/50 text-muted-foreground"
               }}
             />
           </Card>
