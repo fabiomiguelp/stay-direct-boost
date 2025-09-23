@@ -1,102 +1,222 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, DollarSign } from "lucide-react";
-import { format, addDays, isSameDay } from "date-fns";
+import { CalendarDays, Clock, Loader2, AlertCircle } from "lucide-react";
+import { format, addDays, isSameDay, parseISO, differenceInCalendarDays, addYears, startOfDay } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { useToast } from "@/hooks/use-toast";
 
-interface PriceData {
-  date: Date;
-  price: number;
+interface AvailabilityData {
+  date: string;
   available: boolean;
-  promotion?: string;
+  price?: number;
+  minimum_stay?: number;
 }
 
-// Mock data - in real app this would come from API
-const generateMockPrices = (): PriceData[] => {
-  const prices: PriceData[] = [];
-  const today = new Date();
-  
-  for (let i = 0; i < 90; i++) {
-    const date = addDays(today, i);
-    const basePrice = 150;
-    const weekendMultiplier = date.getDay() === 0 || date.getDay() === 6 ? 1.3 : 1;
-    const randomMultiplier = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-    
-    prices.push({
-      date,
-      price: Math.round(basePrice * weekendMultiplier * randomMultiplier),
-      available: Math.random() > 0.1, // 90% available
-      promotion: Math.random() > 0.8 ? "Direct Booking Discount" : undefined
-    });
-  }
-  
-  return prices;
-};
+interface ApiResponse {
+  data: AvailabilityData[];
+  success: boolean;
+  message?: string;
+}
 
 export const AvailabilityCalendar = () => {
-  const [selectedDates, setSelectedDates] = useState<{
-    checkIn?: Date;
-    checkOut?: Date;
-  }>({});
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
+  const [availabilityData, setAvailabilityData] = useState<AvailabilityData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const priceData = generateMockPrices();
+  const { toast } = useToast();
 
-  const getPriceForDate = (date: Date) => {
-    return priceData.find(p => isSameDay(p.date, date));
-  };
+  // Fetch availability data from Hostex API
+  const fetchAvailability = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const startDate = format(new Date(), 'yyyy-MM-dd');
+      const endDate = format(addYears(new Date(), 1), 'yyyy-MM-dd');
+      
+      const response = await fetch(
+        `https://api.hostex.io/v3/availabilities?property_ids=12098462&start_date=${startDate}&end_date=${endDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // Note: In production, API keys should be handled via backend/Supabase
+            'Accept': 'application/json',
+          },
+        }
+      );
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
 
-    const priceInfo = getPriceForDate(date);
-    if (!priceInfo?.available) return;
+      const data = await response.json();
+      
+      // Handle different possible response formats
+      let availabilities: AvailabilityData[] = [];
+      
+      if (data.data && Array.isArray(data.data)) {
+        availabilities = data.data;
+      } else if (Array.isArray(data)) {
+        availabilities = data;
+      } else if (data.availabilities && Array.isArray(data.availabilities)) {
+        availabilities = data.availabilities;
+      }
 
-    if (!selectedDates.checkIn || (selectedDates.checkIn && selectedDates.checkOut)) {
-      // First selection or reset
-      setSelectedDates({ checkIn: date, checkOut: undefined });
-    } else if (date > selectedDates.checkIn) {
-      // Second selection
-      setSelectedDates({ ...selectedDates, checkOut: date });
-    } else {
-      // Earlier date selected, reset
-      setSelectedDates({ checkIn: date, checkOut: undefined });
+      setAvailabilityData(availabilities);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch availability';
+      setError(errorMessage);
+      console.error('Availability fetch error:', err);
+      
+      toast({
+        title: "Connection Error",
+        description: "Unable to fetch real-time availability. Using demo data.",
+        variant: "destructive",
+      });
+
+      // Fallback to demo data
+      generateFallbackData();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const isDateInRange = (date: Date) => {
-    if (!selectedDates.checkIn || !selectedDates.checkOut) return false;
-    return date >= selectedDates.checkIn && date <= selectedDates.checkOut;
+  // Generate fallback demo data when API is unavailable
+  const generateFallbackData = () => {
+    const fallbackData: AvailabilityData[] = [];
+    const today = startOfDay(new Date());
+    
+    for (let i = 0; i < 365; i++) {
+      const date = addDays(today, i);
+      const available = Math.random() > 0.15; // 85% availability
+      const basePrice = 150;
+      const weekendMultiplier = date.getDay() === 0 || date.getDay() === 6 ? 1.3 : 1;
+      const randomMultiplier = 0.8 + Math.random() * 0.4;
+      
+      fallbackData.push({
+        date: format(date, 'yyyy-MM-dd'),
+        available,
+        price: available ? Math.round(basePrice * weekendMultiplier * randomMultiplier) : undefined,
+        minimum_stay: available ? (Math.random() > 0.8 ? 2 : 1) : undefined,
+      });
+    }
+    
+    setAvailabilityData(fallbackData);
   };
 
-  const calculateTotalPrice = () => {
-    if (!selectedDates.checkIn || !selectedDates.checkOut) return 0;
+  useEffect(() => {
+    fetchAvailability();
+  }, []);
+
+  // Get availability data for a specific date
+  const getAvailabilityForDate = (date: Date): AvailabilityData | undefined => {
+    const dateStr = format(startOfDay(date), 'yyyy-MM-dd');
+    return availabilityData.find(item => item.date === dateStr);
+  };
+
+  // Check if a date is available
+  const isDateAvailable = (date: Date): boolean => {
+    const availability = getAvailabilityForDate(date);
+    return availability?.available ?? false;
+  };
+
+  // Check if a date should be disabled
+  const isDateDisabled = (date: Date): boolean => {
+    const today = startOfDay(new Date());
+    const targetDate = startOfDay(date);
     
-    let total = 0;
-    let current = new Date(selectedDates.checkIn);
+    // Disable past dates
+    if (targetDate < today) return true;
     
-    while (current < selectedDates.checkOut) {
-      const priceInfo = getPriceForDate(current);
-      if (priceInfo) {
-        total += priceInfo.price;
+    // Disable unavailable dates
+    return !isDateAvailable(date);
+  };
+
+  // Handle date selection
+  const handleSelect = (range: DateRange | undefined) => {
+    if (!range) {
+      setSelectedRange(undefined);
+      return;
+    }
+
+    // If both dates are selected and the range includes unavailable dates, reset
+    if (range.from && range.to) {
+      let current = startOfDay(range.from);
+      const end = startOfDay(range.to);
+      
+      while (current <= end) {
+        if (!isDateAvailable(current)) {
+          toast({
+            title: "Invalid Selection",
+            description: "Selected range includes unavailable dates. Please select different dates.",
+            variant: "destructive",
+          });
+          setSelectedRange({ from: range.from, to: undefined });
+          return;
+        }
+        current = addDays(current, 1);
+      }
+    }
+
+    setSelectedRange(range);
+  };
+
+  // Calculate total price and nights
+  const calculateBookingDetails = () => {
+    if (!selectedRange?.from || !selectedRange?.to) {
+      return { nights: 0, totalPrice: 0 };
+    }
+
+    const nights = differenceInCalendarDays(selectedRange.to, selectedRange.from);
+    let totalPrice = 0;
+    
+    let current = startOfDay(selectedRange.from);
+    const end = startOfDay(selectedRange.to);
+    
+    while (current < end) {
+      const availability = getAvailabilityForDate(current);
+      if (availability?.price) {
+        totalPrice += availability.price;
       }
       current = addDays(current, 1);
     }
-    
-    return total;
+
+    return { nights, totalPrice };
   };
 
-  const calculateNights = () => {
-    if (!selectedDates.checkIn || !selectedDates.checkOut) return 0;
-    return Math.ceil((selectedDates.checkOut.getTime() - selectedDates.checkIn.getTime()) / (1000 * 60 * 60 * 24));
-  };
+  const { nights, totalPrice } = calculateBookingDetails();
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <Card className="p-8 shadow-card">
+          <div className="flex items-center justify-center space-x-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading real-time availability...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-foreground mb-2">Choose Your Dates</h2>
         <p className="text-muted-foreground">Select check-in and check-out dates to see availability and pricing</p>
+        {error && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">Using demo data - API connection unavailable</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -105,58 +225,62 @@ export const AvailabilityCalendar = () => {
           <Card className="p-6 shadow-card">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold">
-                {format(currentMonth, "MMMM yyyy")}
+                Select Your Stay
               </h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentMonth(prev => addDays(prev, -30))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentMonth(prev => addDays(prev, 30))}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAvailability}
+                className="flex items-center gap-2"
+              >
+                <CalendarDays className="h-4 w-4" />
+                Refresh
+              </Button>
             </div>
             
             <Calendar
-              mode="single"
-              selected={selectedDates.checkIn}
-              onSelect={handleDateSelect}
+              mode="range"
+              selected={selectedRange}
+              onSelect={handleSelect}
               month={currentMonth}
               onMonthChange={setCurrentMonth}
+              numberOfMonths={2}
+              disabled={isDateDisabled}
               className="w-full"
+              classNames={{
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                day_range_middle: "bg-primary/20 text-primary",
+                day_range_end: "bg-primary text-primary-foreground",
+                day_range_start: "bg-primary text-primary-foreground",
+                day_disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
+                day_outside: "text-muted-foreground opacity-50",
+              }}
               components={{
                 Day: ({ date, ...props }) => {
-                  const priceInfo = getPriceForDate(date);
-                  const isSelected = selectedDates.checkIn && isSameDay(date, selectedDates.checkIn) ||
-                                   selectedDates.checkOut && isSameDay(date, selectedDates.checkOut);
-                  const inRange = isDateInRange(date);
+                  const availability = getAvailabilityForDate(date);
+                  const isSelected = selectedRange?.from && isSameDay(date, selectedRange.from) ||
+                                   selectedRange?.to && isSameDay(date, selectedRange.to);
+                  const inRange = selectedRange?.from && selectedRange?.to && 
+                                 date >= selectedRange.from && date <= selectedRange.to;
                   
                   return (
                     <div
                       className={`
-                        relative p-2 text-center cursor-pointer transition-all duration-200 min-h-[60px] flex flex-col justify-between
-                        ${!priceInfo?.available ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' : ''}
+                        relative p-2 text-center cursor-pointer transition-all duration-200 min-h-[50px] flex flex-col justify-between rounded-md
+                        ${!availability?.available ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' : ''}
                         ${isSelected ? 'bg-primary text-primary-foreground' : ''}
                         ${inRange && !isSelected ? 'bg-primary/20' : ''}
-                        ${priceInfo?.available && !isSelected && !inRange ? 'hover:bg-primary/10' : ''}
+                        ${availability?.available && !isSelected && !inRange ? 'hover:bg-primary/10' : ''}
                       `}
-                      onClick={() => priceInfo?.available && handleDateSelect(date)}
+                      {...props}
                     >
                       <span className="text-sm font-medium">{date.getDate()}</span>
-                      {priceInfo?.available && (
+                      {availability?.available && availability.price && (
                         <div className="text-xs">
-                          <div className="font-bold">${priceInfo.price}</div>
-                          {priceInfo.promotion && (
+                          <div className="font-bold">${availability.price}</div>
+                          {availability.minimum_stay && availability.minimum_stay > 1 && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">
-                              Deal
+                              {availability.minimum_stay}n min
                             </Badge>
                           )}
                         </div>
@@ -174,39 +298,43 @@ export const AvailabilityCalendar = () => {
           <Card className="p-6 shadow-card sticky top-4">
             <h3 className="text-xl font-semibold mb-4">Booking Summary</h3>
             
-            {selectedDates.checkIn ? (
+            {selectedRange?.from ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
                   <Clock className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Check-in</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(selectedDates.checkIn, "MMM dd, yyyy")}
+                      {format(selectedRange.from, "MMM dd, yyyy")}
                     </p>
                   </div>
                 </div>
                 
-                {selectedDates.checkOut && (
+                {selectedRange.to && (
                   <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
                     <Clock className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">Check-out</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(selectedDates.checkOut, "MMM dd, yyyy")}
+                        {format(selectedRange.to, "MMM dd, yyyy")}
                       </p>
                     </div>
                   </div>
                 )}
                 
-                {selectedDates.checkOut && (
+                {selectedRange.to && nights > 0 && (
                   <div className="border-t pt-4 space-y-3">
                     <div className="flex justify-between">
                       <span>Nights</span>
-                      <span className="font-medium">{calculateNights()}</span>
+                      <span className="font-medium">{nights}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Average per night</span>
+                      <span className="font-medium">${Math.round(totalPrice / nights)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${calculateTotalPrice()}</span>
+                      <span className="text-primary">${totalPrice}</span>
                     </div>
                     <Button className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300">
                       Continue to Rooms
@@ -228,15 +356,19 @@ export const AvailabilityCalendar = () => {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-primary rounded"></div>
-                <span>Selected</span>
+                <span>Selected dates</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-primary/20 rounded"></div>
-                <span>In range</span>
+                <span>Date range</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-muted rounded"></div>
                 <span>Unavailable</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary rounded"></div>
+                <span>Available with pricing</span>
               </div>
             </div>
           </Card>
