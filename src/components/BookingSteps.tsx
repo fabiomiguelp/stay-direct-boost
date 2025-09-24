@@ -22,7 +22,7 @@ export const BookingSteps = () => {
         return (
           <div className="space-y-8">
             <HeroSection />
-            <AvailabilityCalendar />
+            <AvailabilityCalendar onContinue={() => setCurrentStep(2)} />
           </div>
         );
       case 2:

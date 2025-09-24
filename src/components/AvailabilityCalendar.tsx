@@ -21,7 +21,11 @@ interface ApiResponse {
   message?: string;
 }
 
-export const AvailabilityCalendar = () => {
+interface AvailabilityCalendarProps {
+  onContinue?: () => void;
+}
+
+export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) => {
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -327,7 +331,10 @@ export const AvailabilityCalendar = () => {
                       <span>Total</span>
                       <span className="text-primary">${totalPrice}</span>
                     </div>
-                    <Button className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300">
+                    <Button 
+                      className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
+                      onClick={onContinue}
+                    >
                       Continue to Rooms
                     </Button>
                   </div>
