@@ -9,6 +9,7 @@ import { RoomSelection } from "./RoomSelection";
 import { CustomerDetailsForm } from "./CustomerDetailsForm";
 import { MockStripeCheckout } from "./MockStripeCheckout";
 import { PaymentSuccess } from "./PaymentSuccess";
+import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
 
 const steps = [
   { id: 1, name: "Select Dates", icon: Calendar, description: "Choose your stay dates" },
@@ -161,6 +162,8 @@ export const BookingSteps = () => {
           </Button>
         </div>
       )}
+      
+      <FloatingWhatsAppButton />
     </div>
   );
 };
