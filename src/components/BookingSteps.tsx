@@ -23,15 +23,6 @@ export const BookingSteps = () => {
           <div className="space-y-8">
             <HeroSection />
             <AvailabilityCalendar />
-            <div className="text-center">
-              <Button 
-                onClick={() => setCurrentStep(2)}
-                className="bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
-                size="lg"
-              >
-                Continue to Room Selection
-              </Button>
-            </div>
           </div>
         );
       case 2:
