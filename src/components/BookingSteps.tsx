@@ -10,6 +10,7 @@ import { CustomerDetailsForm } from "./CustomerDetailsForm";
 import { MockStripeCheckout } from "./MockStripeCheckout";
 import { PaymentSuccess } from "./PaymentSuccess";
 import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
+import { Footer } from "./Footer";
 
 const steps = [
   { id: 1, name: "Select Dates", icon: Calendar, description: "Choose your stay dates" },
@@ -164,6 +165,7 @@ export const BookingSteps = () => {
       )}
       
       <FloatingWhatsAppButton />
+      <Footer />
     </div>
   );
 };
