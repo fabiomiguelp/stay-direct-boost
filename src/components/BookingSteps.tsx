@@ -80,7 +80,14 @@ export const BookingSteps = () => {
           <div className="flex items-center justify-center space-x-8">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
-                <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => step.id <= currentStep && setCurrentStep(step.id)}
+                  disabled={step.id > currentStep}
+                  className={`
+                    flex items-center space-x-3 p-2 rounded-lg transition-all duration-300
+                    ${step.id <= currentStep ? 'hover:bg-muted/50 cursor-pointer' : 'cursor-not-allowed'}
+                  `}
+                >
                   <div
                     className={`
                       w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
@@ -106,7 +113,7 @@ export const BookingSteps = () => {
                     </p>
                     <p className="text-sm text-muted-foreground">{step.description}</p>
                   </div>
-                </div>
+                </button>
                 {index < steps.length - 1 && (
                   <div
                     className={`
