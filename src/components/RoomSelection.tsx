@@ -19,6 +19,10 @@ interface Room {
   available: number;
 }
 
+interface RoomSelectionProps {
+  onContinue?: () => void;
+}
+
 // Mock room data
 const rooms: Room[] = [
   {
@@ -83,7 +87,7 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
   "Parking": <Car className="h-4 w-4" />,
 };
 
-export const RoomSelection = () => {
+export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
 
   const handleRoomSelect = (roomId: string) => {
@@ -217,8 +221,9 @@ export const RoomSelection = () => {
                     <Button 
                       className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
                       size="lg"
+                      onClick={onContinue}
                     >
-                      Continue to Payment
+                      Continue to Your Details
                     </Button>
                   )}
                 </div>
