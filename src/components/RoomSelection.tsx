@@ -216,16 +216,6 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
                   >
                     {selectedRoom === room.id ? 'Selected' : 'Select Room'}
                   </Button>
-                  
-                  {selectedRoom === room.id && (
-                    <Button 
-                      className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
-                      size="lg"
-                      onClick={onContinue}
-                    >
-                      Continue to Your Details
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
@@ -233,7 +223,17 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
         ))}
       </div>
 
-      {!selectedRoom && (
+      {selectedRoom ? (
+        <div className="text-center mt-8">
+          <Button 
+            className="bg-gradient-primary hover:shadow-card-hover transition-all duration-300 text-lg font-semibold px-12 py-4 h-auto"
+            size="lg"
+            onClick={onContinue}
+          >
+            Continue to Your Details
+          </Button>
+        </div>
+      ) : (
         <div className="text-center mt-8 p-6 bg-muted/50 rounded-lg">
           <p className="text-muted-foreground">Select a room to continue with your booking</p>
         </div>
