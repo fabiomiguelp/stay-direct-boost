@@ -148,8 +148,22 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       return;
     }
 
-    // If both dates are selected and the range includes unavailable dates, reset
+    // If both dates are selected, validate the selection
     if (range.from && range.to) {
+      const nights = differenceInCalendarDays(range.to, range.from);
+      
+      // Check minimum 3 nights requirement
+      if (nights < 3) {
+        toast({
+          title: "Minimum Stay Required",
+          description: "Please select at least 3 nights for your stay.",
+          variant: "destructive",
+        });
+        setSelectedRange({ from: range.from, to: undefined });
+        return;
+      }
+      
+      // Check if range includes unavailable dates
       let current = startOfDay(range.from);
       const end = startOfDay(range.to);
       
@@ -213,6 +227,9 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-foreground mb-2">Choose Your Dates</h2>
         <p className="text-muted-foreground">Select check-in and check-out dates to see availability and pricing</p>
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm font-medium text-blue-800">Minimum stay: 3 nights required</p>
+        </div>
         {error && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center gap-2 text-yellow-800">
@@ -331,12 +348,27 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
                       <span>Total</span>
                       <span className="text-primary">${totalPrice}</span>
                     </div>
-                    <Button 
-                      className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
-                      onClick={onContinue}
-                    >
-                      Continue to Rooms
-                    </Button>
+                    
+                    {nights >= 3 ? (
+                      <Button 
+                        className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
+                        onClick={onContinue}
+                      >
+                        Continue to Rooms
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <Button 
+                          disabled
+                          className="w-full opacity-50 cursor-not-allowed"
+                        >
+                          Continue to Rooms
+                        </Button>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Minimum 3 nights required ({3 - nights} more night{3 - nights > 1 ? 's' : ''} needed)
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
