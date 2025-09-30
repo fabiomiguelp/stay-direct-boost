@@ -31,6 +31,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [usingFallbackData, setUsingFallbackData] = useState(false);
   const { toast } = useToast();
 
   // Fetch availability data from Hostex API
@@ -72,6 +73,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       }
 
       setAvailabilityData(availabilities);
+      setUsingFallbackData(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch availability';
       setError(errorMessage);
@@ -85,6 +87,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
 
       // Fallback to demo data
       generateFallbackData();
+      setUsingFallbackData(true);
     } finally {
       setLoading(false);
     }
@@ -209,6 +212,24 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
 
   const { nights, totalPrice } = calculateBookingDetails();
 
+  // Custom day content to show prices
+  const DayContent = (props: any) => {
+    const date = props.date;
+    const availability = getAvailabilityForDate(date);
+    const showPrice = !usingFallbackData && availability?.available && availability?.price;
+    
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        <span>{format(date, 'd')}</span>
+        {showPrice && (
+          <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+            ${availability.price}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-4">
@@ -268,6 +289,9 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
               numberOfMonths={window.innerWidth < 1024 ? 1 : 2}
               disabled={isDateDisabled}
               className="w-full pointer-events-auto"
+              components={{
+                DayContent: DayContent
+              }}
               classNames={{
                 months: "flex flex-col lg:flex-row space-y-4 lg:space-x-4 lg:space-y-0",
                 month: "space-y-4 w-full",
@@ -282,7 +306,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
                 head_cell: "text-muted-foreground rounded-md w-full font-medium text-xs uppercase tracking-wider flex-1 text-center py-2",
                 row: "flex w-full",
                 cell: "relative flex-1 text-center text-sm p-1 focus-within:relative focus-within:z-20",
-                day: "h-12 w-full p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-primary/10 transition-all duration-200 flex flex-col items-center justify-center gap-1",
+                day: "h-16 w-full p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-primary/10 transition-all duration-200 flex flex-col items-center justify-center gap-0.5",
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground font-semibold",
                 day_range_middle: "bg-primary/15 text-primary font-medium rounded-none",
                 day_range_end: "bg-primary text-primary-foreground font-semibold rounded-r-lg",
