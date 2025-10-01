@@ -34,24 +34,35 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
   const [usingFallbackData, setUsingFallbackData] = useState(false);
   const { toast } = useToast();
 
-  // Fetch availability data from Hostex API
-  const fetchAvailability = async () => {
+  // Fetch availability data from API
+  const fetchAvailability = async (monthDate: Date = currentMonth) => {
     try {
       setLoading(true);
       setError(null);
       
-      const startDate = format(new Date(), 'yyyy-MM-dd');
-      const endDate = format(addYears(new Date(), 1), 'yyyy-MM-dd');
+      // Get start of current month and end of next month
+      const startDate = format(startOfDay(monthDate), 'yyyy-MM-dd');
+      const endDate = format(addDays(addDays(startOfDay(monthDate), 62), 0), 'yyyy-MM-dd'); // ~2 months of data
+      
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
       const response = await fetch(
-        `https://api.hostex.io/v3/availabilities?property_ids=12098462&start_date=${startDate}&end_date=${endDate}`,
+        `${apiBaseUrl}/api/calendar`,
         {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Note: In production, API keys should be handled via backend/Supabase
-            'Accept': 'application/json',
           },
+          body: JSON.stringify({
+            listings: [
+              {
+                channel_type: "booking_site",
+                listing_id: "106063-11881"
+              }
+            ],
+            start_date: startDate,
+            end_date: endDate
+          })
         }
       );
 
@@ -117,8 +128,14 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
   };
 
   useEffect(() => {
-    fetchAvailability();
+    fetchAvailability(currentMonth);
   }, []);
+
+  // Handle month change
+  const handleMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth);
+    fetchAvailability(newMonth);
+  };
 
   // Get availability data for a specific date
   const getAvailabilityForDate = (date: Date): AvailabilityData | undefined => {
@@ -272,7 +289,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchAvailability}
+                onClick={() => fetchAvailability(currentMonth)}
                 className="flex items-center gap-2"
               >
                 <CalendarDays className="h-4 w-4" />
@@ -285,7 +302,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
               selected={selectedRange}
               onSelect={handleSelect}
               month={currentMonth}
-              onMonthChange={setCurrentMonth}
+              onMonthChange={handleMonthChange}
               numberOfMonths={window.innerWidth < 1024 ? 1 : 2}
               disabled={isDateDisabled}
               className="w-full pointer-events-auto"
