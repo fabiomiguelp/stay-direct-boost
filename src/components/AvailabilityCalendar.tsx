@@ -84,11 +84,11 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       // Parse the API response format
       let availabilities: AvailabilityData[] = [];
       
-      if (data.data?.listings?.[0]?.calendar && Array.isArray(data.data.listings[0].calendar)) {
-        // Map the calendar data and convert inventory to available boolean
-        availabilities = data.data.listings[0].calendar.map((day: any) => ({
+      if (data.data?.properties?.[0]?.availabilities && Array.isArray(data.data.properties[0].availabilities)) {
+        // Map the availability data - now has 'available' field directly
+        availabilities = data.data.properties[0].availabilities.map((day: any) => ({
           date: day.date,
-          available: day.inventory > 0, // inventory 0 = occupied, 1+ = available
+          available: day.available, // Use the available boolean from API
           price: day.price,
           inventory: day.inventory,
           restrictions: day.restrictions
