@@ -56,13 +56,14 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
       const response = await fetch(
-        `${apiBaseUrl}/api/calendar`,
+        `${apiBaseUrl}/api/comprehensive-availability`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            property_ids: "12098462",
             listings: [
               {
                 channel_type: "booking_site",
