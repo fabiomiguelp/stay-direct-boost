@@ -46,9 +46,12 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       setLoading(true);
       setError(null);
       
-      // Get start of current month and end of next month
-      const startDate = format(startOfDay(monthDate), 'yyyy-MM-dd');
-      const endDate = format(addDays(addDays(startOfDay(monthDate), 62), 0), 'yyyy-MM-dd'); // ~2 months of data
+      // Get start of current month and end of 2 months later to cover both displayed months
+      const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+      const endOfNextMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 2, 0); // Last day of next month
+      
+      const startDate = format(startOfMonth, 'yyyy-MM-dd');
+      const endDate = format(endOfNextMonth, 'yyyy-MM-dd');
       
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
