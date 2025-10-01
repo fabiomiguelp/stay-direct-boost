@@ -93,6 +93,13 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
           inventory: day.inventory,
           restrictions: day.restrictions
         }));
+        
+        console.log('Loaded availability data:', {
+          totalDays: availabilities.length,
+          firstDate: availabilities[0]?.date,
+          lastDate: availabilities[availabilities.length - 1]?.date,
+          sample: availabilities.slice(0, 5)
+        });
       }
 
       setAvailabilityData(availabilities);
@@ -245,7 +252,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
   const DayContent = (props: any) => {
     const date = props.date;
     const availability = getAvailabilityForDate(date);
-    const showPrice = !usingFallbackData && availability?.available && availability?.price;
+    const showPrice = !usingFallbackData && availability?.price !== undefined;
     
     return (
       <div className="flex flex-col items-center justify-center w-full h-full">
