@@ -12,7 +12,13 @@ interface AvailabilityData {
   date: string;
   available: boolean;
   price?: number;
-  minimum_stay?: number;
+  inventory?: number;
+  restrictions?: {
+    min_stay_on_arrival?: number | null;
+    max_stay_on_arrival?: number | null;
+    closed_on_arrival?: boolean | null;
+    closed_on_departure?: boolean | null;
+  };
 }
 
 interface ApiResponse {
@@ -72,15 +78,18 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
 
       const data = await response.json();
       
-      // Handle different possible response formats
+      // Parse the API response format
       let availabilities: AvailabilityData[] = [];
       
-      if (data.data && Array.isArray(data.data)) {
-        availabilities = data.data;
-      } else if (Array.isArray(data)) {
-        availabilities = data;
-      } else if (data.availabilities && Array.isArray(data.availabilities)) {
-        availabilities = data.availabilities;
+      if (data.data?.listings?.[0]?.calendar && Array.isArray(data.data.listings[0].calendar)) {
+        // Map the calendar data and convert inventory to available boolean
+        availabilities = data.data.listings[0].calendar.map((day: any) => ({
+          date: day.date,
+          available: day.inventory > 0, // inventory 0 = occupied, 1+ = available
+          price: day.price,
+          inventory: day.inventory,
+          restrictions: day.restrictions
+        }));
       }
 
       setAvailabilityData(availabilities);
@@ -120,7 +129,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
         date: format(date, 'yyyy-MM-dd'),
         available,
         price: available ? Math.round(basePrice * weekendMultiplier * randomMultiplier) : undefined,
-        minimum_stay: available ? (Math.random() > 0.8 ? 2 : 1) : undefined,
+        inventory: available ? 1 : 0,
       });
     }
     
