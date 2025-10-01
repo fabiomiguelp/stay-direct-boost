@@ -180,17 +180,17 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
                     <div className="flex items-center justify-end gap-2 mb-1">
                       {room.originalPrice && (
                         <span className="text-muted-foreground line-through text-lg">
-                          ${room.originalPrice}
+                          €{room.originalPrice}
                         </span>
                       )}
                       <span className="text-3xl font-bold text-primary">
-                        ${room.price}
+                        €{room.price}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">per night</p>
                     {room.originalPrice && (
                       <p className="text-sm text-success font-medium">
-                        Save ${room.originalPrice - room.price}
+                        Save €{room.originalPrice - room.price}
                       </p>
                     )}
                   </div>

@@ -260,7 +260,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
         <span>{format(date, 'd')}</span>
         {showPrice && (
           <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
-            ${availability.price}
+            €{availability.price}
           </span>
         )}
       </div>
@@ -403,11 +403,11 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
                     </div>
                     <div className="flex justify-between">
                       <span>Average per night</span>
-                      <span className="font-medium">${Math.round(totalPrice / nights)}</span>
+                      <span className="font-medium">€{Math.round(totalPrice / nights)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${totalPrice}</span>
+                      <span className="text-primary">€{totalPrice}</span>
                     </div>
                     
                     {nights >= 3 ? (
