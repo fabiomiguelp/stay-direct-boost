@@ -252,7 +252,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
   const DayContent = (props: any) => {
     const date = props.date;
     const availability = getAvailabilityForDate(date);
-    const showPrice = !usingFallbackData && availability?.price !== undefined;
+    const showPrice = !usingFallbackData && availability?.available && availability?.price !== undefined;
     
     return (
       <div className="flex flex-col items-center justify-center w-full h-full">
