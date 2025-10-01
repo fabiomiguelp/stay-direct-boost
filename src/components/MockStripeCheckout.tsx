@@ -172,10 +172,10 @@ export const MockStripeCheckout = ({
                     <Loader2 className="h-5 w-5 animate-spin mr-2" />
                     Processing Payment...
                   </>
-                ) : (
+                 ) : (
                   <>
                     <Lock className="h-5 w-5 mr-2" />
-                    Pay ${totalAmount}
+                    Pay €{totalAmount}
                   </>
                 )}
               </Button>
@@ -222,14 +222,14 @@ export const MockStripeCheckout = ({
               
               <div className="flex justify-between">
                 <span>Average per night</span>
-                <span className="font-medium">${Math.round(totalAmount / nights)}</span>
+                <span className="font-medium">€{Math.round(totalAmount / nights)}</span>
               </div>
 
               <Separator />
 
               <div className="flex justify-between text-lg font-bold">
                 <span>Total Amount</span>
-                <span className="text-primary">${totalAmount}</span>
+                <span className="text-primary">€{totalAmount}</span>
               </div>
             </div>
 

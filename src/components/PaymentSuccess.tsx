@@ -70,7 +70,7 @@ export const PaymentSuccess = ({
               </div>
               <div className="flex justify-between border-t pt-3">
                 <span className="font-semibold">Total Paid:</span>
-                <span className="font-bold text-primary">${totalAmount}</span>
+                <span className="font-bold text-primary">€{totalAmount}</span>
               </div>
             </div>
           </div>
