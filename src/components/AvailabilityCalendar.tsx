@@ -61,20 +61,15 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
       const response = await fetch(
-        `${apiBaseUrl}/api/comprehensive-availability`,
+        `${apiBaseUrl}/api/calendar`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            property_ids: "12098462",
-            listings: [
-              {
-                channel_type: "booking_site",
-                listing_id: "106063-11881"
-              }
-            ],
+            listing_id: "106063-11881",
+            channel_type: "booking_site",
             start_date: startDate,
             end_date: endDate
           })
@@ -90,11 +85,11 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       // Parse the API response format
       let availabilities: AvailabilityData[] = [];
       
-      if (data.data?.properties?.[0]?.availabilities && Array.isArray(data.data.properties[0].availabilities)) {
-        // Map the availability data - now has 'available' field directly
-        availabilities = data.data.properties[0].availabilities.map((day: any) => ({
+      if (data.data?.listings?.[0]?.calendar && Array.isArray(data.data.listings[0].calendar)) {
+        // Map the availability data - determine availability from inventory
+        availabilities = data.data.listings[0].calendar.map((day: any) => ({
           date: day.date,
-          available: day.available, // Use the available boolean from API
+          available: day.inventory > 0, // Available if inventory > 0
           price: day.price,
           inventory: day.inventory,
           restrictions: day.restrictions
