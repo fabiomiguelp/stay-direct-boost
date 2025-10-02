@@ -66,6 +66,13 @@ export const BookingSteps = () => {
               nights={bookingData.nights}
               onContinue={async () => {
                 try {
+                  console.log('Creating checkout session with data:', {
+                    totalAmount: bookingData.totalAmount,
+                    nights: bookingData.nights,
+                    checkInDate: bookingData.checkInDate,
+                    checkOutDate: bookingData.checkOutDate
+                  });
+
                   const response = await fetch('http://localhost:8000/api/create-checkout-session', {
                     method: 'POST',
                     headers: {
@@ -78,14 +85,26 @@ export const BookingSteps = () => {
                       checkOutDate: bookingData.checkOutDate
                     })
                   });
+
+                  console.log('Response status:', response.status);
+                  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+
                   const data = await response.json();
+                  console.log('Received session data:', data);
+
                   if (data.sessionId) {
                     window.location.href = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+                  } else {
+                    console.error('No sessionId in response:', data);
                   }
                 } catch (error) {
                   console.error('Error creating checkout session:', error);
                 }
-              }} 
+              }}
             />
           </div>
         );
