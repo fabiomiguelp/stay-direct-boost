@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Calendar, Home, CreditCard, User, CheckCircle } from "lucide-react";
+import { Check, Calendar, Home, CheckCircle } from "lucide-react";
 import { HeroSection } from "./HeroSection";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
 import { RoomSelection } from "./RoomSelection";
-import { CustomerDetailsForm } from "./CustomerDetailsForm";
-import { MockStripeCheckout } from "./MockStripeCheckout";
 import { PaymentSuccess } from "./PaymentSuccess";
 import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
 import { Footer } from "./Footer";
@@ -15,27 +13,31 @@ import { Footer } from "./Footer";
 const steps = [
   { id: 1, name: "Select Dates", icon: Calendar, description: "Choose your stay dates" },
   { id: 2, name: "Choose Room", icon: Home, description: "Pick your perfect room" },
-  { id: 3, name: "Your Details", icon: User, description: "Enter your information" },
-  { id: 4, name: "Secure Payment", icon: CreditCard, description: "Complete your booking" },
-  { id: 5, name: "Confirmation", icon: CheckCircle, description: "Booking confirmed" }
+  { id: 3, name: "Confirmation", icon: CheckCircle, description: "Booking confirmed" }
 ];
-
-interface CustomerDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  country: string;
-}
 
 export const BookingSteps = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | null>(null);
   const [bookingData, setBookingData] = useState({
     totalAmount: 0,
     nights: 0,
     checkInDate: "",
     checkOutDate: ""
   });
+
+  // Check for return from Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('payment');
+    if (status === 'success') {
+      setPaymentStatus('success');
+      setCurrentStep(3);
+    } else if (status === 'error') {
+      setPaymentStatus('error');
+      setCurrentStep(3);
+    }
+  }, []);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -62,43 +64,29 @@ export const BookingSteps = () => {
             <RoomSelection 
               totalAmount={bookingData.totalAmount}
               nights={bookingData.nights}
-              onContinue={() => setCurrentStep(3)} 
+              onContinue={() => {
+                // Redirect to Stripe Checkout
+                const stripeCheckoutUrl = `https://checkout.stripe.com/pay/your-stripe-session-id?return_url=${encodeURIComponent(window.location.origin + '/?payment=success')}&cancel_url=${encodeURIComponent(window.location.origin + '/?payment=error')}`;
+                window.location.href = stripeCheckoutUrl;
+              }} 
             />
           </div>
         );
       case 3:
         return (
-          <CustomerDetailsForm 
-            onContinue={(details) => {
-              setCustomerDetails(details);
-              setCurrentStep(4);
-            }} 
-          />
-        );
-      case 4:
-        return customerDetails ? (
-          <MockStripeCheckout 
-            customerDetails={customerDetails}
-            totalAmount={bookingData.totalAmount}
-            nights={bookingData.nights}
-            onPaymentSuccess={() => setCurrentStep(5)}
-            onBack={() => setCurrentStep(3)}
-          />
-        ) : null;
-      case 5:
-        return customerDetails ? (
           <PaymentSuccess 
-            customerDetails={customerDetails}
+            paymentStatus={paymentStatus || 'success'}
             totalAmount={bookingData.totalAmount}
             nights={bookingData.nights}
             checkInDate={bookingData.checkInDate}
             checkOutDate={bookingData.checkOutDate}
             onNewBooking={() => {
               setCurrentStep(1);
-              setCustomerDetails(null);
+              setPaymentStatus(null);
+              window.history.replaceState({}, '', '/');
             }}
           />
-        ) : null;
+        );
       default:
         return null;
     }

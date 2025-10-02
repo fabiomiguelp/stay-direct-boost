@@ -2,15 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Calendar, User, Mail, Globe, Home } from "lucide-react";
 
-interface CustomerDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  country: string;
-}
-
 interface PaymentSuccessProps {
-  customerDetails: CustomerDetails;
+  paymentStatus: 'success' | 'error';
   totalAmount: number;
   nights: number;
   checkInDate?: string;
@@ -19,14 +12,39 @@ interface PaymentSuccessProps {
 }
 
 export const PaymentSuccess = ({ 
-  customerDetails, 
+  paymentStatus,
   totalAmount, 
   nights,
   checkInDate,
   checkOutDate,
   onNewBooking 
 }: PaymentSuccessProps) => {
-  const bookingReference = `BK${Date.now().toString().slice(-6)}`;
+  const bookingReference = `PRR-${Date.now().toString().slice(-8)}`;
+
+  if (paymentStatus === 'error') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16">
+        <Card className="p-8">
+          <div className="text-center space-y-6">
+            <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Payment Failed</h1>
+              <p className="text-muted-foreground">
+                Your payment was not processed. Please try again or contact support.
+              </p>
+            </div>
+            <Button onClick={onNewBooking} size="lg">
+              Try Again
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -40,63 +58,39 @@ export const PaymentSuccess = ({
           Thank you for your booking. Your reservation has been confirmed.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* Booking Details */}
-          <div className="text-left">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Booking Details
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Booking Reference:</span>
-                <span className="font-mono font-semibold">{bookingReference}</span>
-              </div>
-              {checkInDate && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-in:</span>
-                  <span className="font-medium">{checkInDate}</span>
+        {/* Booking Details */}
+        <Card className="p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 justify-center">
+            <Calendar className="h-5 w-5 text-primary" />
+            Booking Details
+          </h2>
+          <div className="space-y-4 text-left max-w-md mx-auto">
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-muted-foreground">Booking Reference</span>
+              <span className="font-mono font-semibold text-primary">{bookingReference}</span>
+            </div>
+            {checkInDate && checkOutDate && (
+              <>
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-muted-foreground">Check-in Date</span>
+                  <span className="font-semibold">{checkInDate}</span>
                 </div>
-              )}
-              {checkOutDate && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-out:</span>
-                  <span className="font-medium">{checkOutDate}</span>
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-muted-foreground">Check-out Date</span>
+                  <span className="font-semibold">{checkOutDate}</span>
                 </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Nights:</span>
-                <span className="font-medium">{nights}</span>
-              </div>
-              <div className="flex justify-between border-t pt-3">
-                <span className="font-semibold">Total Paid:</span>
-                <span className="font-bold text-primary">€{totalAmount}</span>
-              </div>
+              </>
+            )}
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-muted-foreground">Number of Nights</span>
+              <span className="font-semibold">{nights}</span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-muted-foreground">Total Amount</span>
+              <span className="text-2xl font-bold text-primary">${totalAmount}</span>
             </div>
           </div>
-
-          {/* Guest Information */}
-          <div className="text-left">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Guest Information
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span>{customerDetails.firstName} {customerDetails.lastName}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{customerDetails.email}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <span>{customerDetails.country}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </Card>
 
         {/* Next Steps */}
         <div className="bg-secondary rounded-lg p-6 mb-8">
