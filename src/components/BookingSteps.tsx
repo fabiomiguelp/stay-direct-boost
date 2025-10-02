@@ -33,7 +33,7 @@ export const BookingSteps = () => {
     if (status === 'success') {
       setPaymentStatus('success');
       setCurrentStep(3);
-    } else if (status === 'error') {
+    } else if (status === 'error' || status === 'canceled') {
       setPaymentStatus('error');
       setCurrentStep(3);
     }
@@ -64,10 +64,27 @@ export const BookingSteps = () => {
             <RoomSelection 
               totalAmount={bookingData.totalAmount}
               nights={bookingData.nights}
-              onContinue={() => {
-                // Redirect to Stripe Checkout
-                const stripeCheckoutUrl = `https://checkout.stripe.com/pay/your-stripe-session-id?return_url=${encodeURIComponent(window.location.origin + '/?payment=success')}&cancel_url=${encodeURIComponent(window.location.origin + '/?payment=error')}`;
-                window.location.href = stripeCheckoutUrl;
+              onContinue={async () => {
+                try {
+                  const response = await fetch('http://localhost:8000/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      totalAmount: bookingData.totalAmount,
+                      nights: bookingData.nights,
+                      checkInDate: bookingData.checkInDate,
+                      checkOutDate: bookingData.checkOutDate
+                    })
+                  });
+                  const data = await response.json();
+                  if (data.sessionId) {
+                    window.location.href = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+                  }
+                } catch (error) {
+                  console.error('Error creating checkout session:', error);
+                }
               }} 
             />
           </div>
