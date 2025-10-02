@@ -28,7 +28,12 @@ interface ApiResponse {
 }
 
 interface AvailabilityCalendarProps {
-  onContinue?: () => void;
+  onContinue?: (bookingData: {
+    totalPrice: number;
+    nights: number;
+    checkInDate: string;
+    checkOutDate: string;
+  }) => void;
 }
 
 export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) => {
@@ -417,7 +422,16 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
                     {nights >= 3 ? (
                       <Button 
                         className="w-full bg-gradient-accent hover:shadow-card-hover transition-all duration-300"
-                        onClick={onContinue}
+                        onClick={() => {
+                          if (onContinue && selectedRange?.from && selectedRange?.to) {
+                            onContinue({
+                              totalPrice,
+                              nights,
+                              checkInDate: format(selectedRange.from, "MMM dd, yyyy"),
+                              checkOutDate: format(selectedRange.to, "MMM dd, yyyy")
+                            });
+                          }
+                        }}
                       >
                         Continue to Rooms
                       </Button>

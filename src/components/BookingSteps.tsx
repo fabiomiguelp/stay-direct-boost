@@ -31,10 +31,10 @@ export const BookingSteps = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails | null>(null);
   const [bookingData, setBookingData] = useState({
-    totalAmount: 450,
-    nights: 3,
-    checkInDate: "Dec 25, 2024",
-    checkOutDate: "Dec 28, 2024"
+    totalAmount: 0,
+    nights: 0,
+    checkInDate: "",
+    checkOutDate: ""
   });
 
   const renderStepContent = () => {
@@ -43,13 +43,27 @@ export const BookingSteps = () => {
         return (
           <div className="space-y-8">
             <HeroSection />
-            <AvailabilityCalendar onContinue={() => setCurrentStep(2)} />
+            <AvailabilityCalendar 
+              onContinue={(data) => {
+                setBookingData({
+                  totalAmount: data.totalPrice,
+                  nights: data.nights,
+                  checkInDate: data.checkInDate,
+                  checkOutDate: data.checkOutDate
+                });
+                setCurrentStep(2);
+              }} 
+            />
           </div>
         );
       case 2:
         return (
           <div className="space-y-8">
-            <RoomSelection onContinue={() => setCurrentStep(3)} />
+            <RoomSelection 
+              totalAmount={bookingData.totalAmount}
+              nights={bookingData.nights}
+              onContinue={() => setCurrentStep(3)} 
+            />
           </div>
         );
       case 3:

@@ -2,9 +2,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wifi, Car, Coffee, Users, Bed, Maximize } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Wifi, Car, Coffee, Users, Bed, Maximize, Baby, Minus, Plus } from "lucide-react";
 
 interface RoomSelectionProps {
+  totalAmount: number;
+  nights: number;
   onContinue?: () => void;
 }
 
@@ -26,21 +30,29 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
   "Parking": <Car className="h-4 w-4" />,
 };
 
-export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
-  const [selectedPersons, setSelectedPersons] = useState<number>(2);
+export const RoomSelection = ({ totalAmount, nights, onContinue }: RoomSelectionProps) => {
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
+  const [needsBabyCrib, setNeedsBabyCrib] = useState<boolean>(false);
 
-  const handlePersonSelect = (persons: number) => {
-    setSelectedPersons(persons);
+  const totalGuests = adults + children;
+  const maxGuests = 4;
+
+  const handleAdultsChange = (increment: boolean) => {
+    if (increment && totalGuests < maxGuests) {
+      setAdults(prev => Math.min(prev + 1, maxGuests));
+    } else if (!increment && adults > 1) {
+      setAdults(prev => prev - 1);
+    }
   };
 
-  // Calculate price based on number of persons
-  const calculatePrice = (persons: number) => {
-    if (persons <= 2) return accommodation.basePrice;
-    // Add extra charge for 3rd and 4th person
-    return accommodation.basePrice + ((persons - 2) * 20);
+  const handleChildrenChange = (increment: boolean) => {
+    if (increment && totalGuests < maxGuests) {
+      setChildren(prev => Math.min(prev + 1, maxGuests - adults));
+    } else if (!increment && children > 0) {
+      setChildren(prev => prev - 1);
+    }
   };
-
-  const currentPrice = calculatePrice(selectedPersons);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -105,46 +117,104 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
         </div>
       </Card>
 
-      {/* Person Selection */}
+      {/* Guest Selection */}
       <Card className="p-6 shadow-card">
-        <h3 className="text-xl font-semibold mb-4">Number of Guests</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((persons) => (
-            <Card
-              key={persons}
-              className={`p-6 cursor-pointer transition-all duration-300 hover:shadow-card-hover ${
-                selectedPersons === persons 
-                  ? 'ring-2 ring-primary bg-primary/5' 
-                  : 'hover:bg-secondary/50'
-              }`}
-              onClick={() => handlePersonSelect(persons)}
-            >
-              <div className="text-center space-y-3">
-                <Users className={`h-8 w-8 mx-auto ${selectedPersons === persons ? 'text-primary' : 'text-muted-foreground'}`} />
-                <div>
-                  <p className="font-semibold text-lg">{persons} {persons === 1 ? 'Person' : 'Persons'}</p>
-                  <p className="text-sm text-muted-foreground mt-1">€{calculatePrice(persons)}/night</p>
-                  {persons > 2 && (
-                    <p className="text-xs text-primary mt-1">+€{(persons - 2) * 20} extra</p>
-                  )}
-                </div>
-                {selectedPersons === persons && (
-                  <Badge className="bg-primary">Selected</Badge>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <h3 className="text-xl font-semibold mb-6">Select Guests</h3>
         
-        <div className="mt-6 p-4 bg-secondary rounded-lg">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6">
+          {/* Adults Selection */}
+          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
             <div>
-              <p className="font-medium">Price per night</p>
-              <p className="text-sm text-muted-foreground">Based on {selectedPersons} {selectedPersons === 1 ? 'person' : 'persons'}</p>
+              <p className="font-semibold text-lg">Adults</p>
+              <p className="text-sm text-muted-foreground">Age 13 or above</p>
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-primary">€{currentPrice}</p>
-              <p className="text-sm text-muted-foreground">per night</p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleAdultsChange(false)}
+                disabled={adults <= 1}
+                className="h-10 w-10 rounded-full"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-xl font-semibold w-8 text-center">{adults}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleAdultsChange(true)}
+                disabled={totalGuests >= maxGuests}
+                className="h-10 w-10 rounded-full"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Children Selection */}
+          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+            <div>
+              <p className="font-semibold text-lg">Children</p>
+              <p className="text-sm text-muted-foreground">Age 2-12</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleChildrenChange(false)}
+                disabled={children <= 0}
+                className="h-10 w-10 rounded-full"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-xl font-semibold w-8 text-center">{children}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleChildrenChange(true)}
+                disabled={totalGuests >= maxGuests}
+                className="h-10 w-10 rounded-full"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Baby Crib Option */}
+          <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Baby className="h-5 w-5 text-primary" />
+              <div>
+                <Label htmlFor="baby-crib" className="font-semibold text-base cursor-pointer">
+                  Baby Crib
+                </Label>
+                <p className="text-sm text-muted-foreground">For infants (0-2 years) - Free</p>
+              </div>
+            </div>
+            <Checkbox
+              id="baby-crib"
+              checked={needsBabyCrib}
+              onCheckedChange={(checked) => setNeedsBabyCrib(checked as boolean)}
+              className="h-5 w-5"
+            />
+          </div>
+
+          {/* Summary */}
+          <div className="pt-4 border-t">
+            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
+              <div>
+                <p className="font-medium">Total for {nights} {nights === 1 ? 'night' : 'nights'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {adults} {adults === 1 ? 'adult' : 'adults'}
+                  {children > 0 && `, ${children} ${children === 1 ? 'child' : 'children'}`}
+                  {needsBabyCrib && ', with baby crib'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">All guests included</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-primary">€{totalAmount}</p>
+                <p className="text-xs text-muted-foreground">(€{Math.round(totalAmount / nights)}/night)</p>
+              </div>
             </div>
           </div>
         </div>
