@@ -267,18 +267,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
     );
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto p-4">
-        <Card className="p-8 shadow-card">
-          <div className="flex items-center justify-center space-x-3">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading real-time availability...</p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  // Remove the full-page loader - we'll show inline loading instead
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
@@ -301,7 +290,7 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Calendar */}
         <div className="lg:col-span-2">
-          <Card className="p-4 lg:p-6 shadow-card border-0 lg:border">
+          <Card className="p-4 lg:p-6 shadow-card border-0 lg:border relative">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold">
                 Select Your Stay
@@ -311,11 +300,26 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
                 size="sm"
                 onClick={() => fetchAvailability(currentMonth)}
                 className="flex items-center gap-2"
+                disabled={loading}
               >
-                <CalendarDays className="h-4 w-4" />
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CalendarDays className="h-4 w-4" />
+                )}
                 Refresh
               </Button>
             </div>
+            
+            {/* Loading Overlay for Calendar Only */}
+            {loading && (
+              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Loading availability...</p>
+                </div>
+              </div>
+            )}
             
             <Calendar
               mode="range"
