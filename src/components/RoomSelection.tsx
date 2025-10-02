@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Wifi, Car, Coffee, Users, Bed, Maximize, Baby, Minus, Plus } from "lucide-react";
 
 interface RoomSelectionProps {
+  totalAmount: number;
+  nights: number;
   onContinue?: () => void;
 }
 
@@ -28,7 +30,7 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
   "Parking": <Car className="h-4 w-4" />,
 };
 
-export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
+export const RoomSelection = ({ totalAmount, nights, onContinue }: RoomSelectionProps) => {
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [needsBabyCrib, setNeedsBabyCrib] = useState<boolean>(false);
@@ -51,13 +53,6 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
       setChildren(prev => prev - 1);
     }
   };
-
-  // Calculate price - base price for all configurations (no extra charges)
-  const calculatePrice = () => {
-    return accommodation.basePrice; // Everything included at base price
-  };
-
-  const currentPrice = calculatePrice();
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -208,16 +203,17 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
               <div>
-                <p className="font-medium">Price per night</p>
+                <p className="font-medium">Total for {nights} {nights === 1 ? 'night' : 'nights'}</p>
                 <p className="text-sm text-muted-foreground">
                   {adults} {adults === 1 ? 'adult' : 'adults'}
                   {children > 0 && `, ${children} ${children === 1 ? 'child' : 'children'}`}
                   {needsBabyCrib && ', with baby crib'}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">All guests included in base price</p>
+                <p className="text-xs text-muted-foreground mt-1">All guests included</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-primary">€{currentPrice}</p>
+                <p className="text-3xl font-bold text-primary">€{totalAmount}</p>
+                <p className="text-xs text-muted-foreground">(€{Math.round(totalAmount / nights)}/night)</p>
               </div>
             </div>
           </div>
