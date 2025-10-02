@@ -52,26 +52,9 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
     }
   };
 
-  // Calculate price based on number of adults and children
+  // Calculate price - base price for all configurations (no extra charges)
   const calculatePrice = () => {
-    let price = accommodation.basePrice;
-    
-    // Base price covers up to 2 adults
-    if (adults > 2) {
-      price += (adults - 2) * 20; // €20 per additional adult
-    }
-    
-    // Children pricing: €15 per child
-    if (children > 0) {
-      price += children * 15;
-    }
-    
-    // Baby crib: €10 per night
-    if (needsBabyCrib) {
-      price += 10;
-    }
-    
-    return price;
+    return accommodation.basePrice; // Everything included at base price
   };
 
   const currentPrice = calculatePrice();
@@ -210,7 +193,7 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
                 <Label htmlFor="baby-crib" className="font-semibold text-base cursor-pointer">
                   Baby Crib
                 </Label>
-                <p className="text-sm text-muted-foreground">For infants (0-2 years) - €10/night</p>
+                <p className="text-sm text-muted-foreground">For infants (0-2 years) - Free</p>
               </div>
             </div>
             <Checkbox
@@ -223,39 +206,15 @@ export const RoomSelection = ({ onContinue }: RoomSelectionProps) => {
 
           {/* Summary */}
           <div className="pt-4 border-t">
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Base price (up to 2 adults):</span>
-                <span>€{accommodation.basePrice}</span>
-              </div>
-              {adults > 2 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Extra adults ({adults - 2} × €20):</span>
-                  <span>€{(adults - 2) * 20}</span>
-                </div>
-              )}
-              {children > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Children ({children} × €15):</span>
-                  <span>€{children * 15}</span>
-                </div>
-              )}
-              {needsBabyCrib && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Baby crib:</span>
-                  <span>€10</span>
-                </div>
-              )}
-            </div>
-            
             <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
               <div>
-                <p className="font-medium">Total per night</p>
+                <p className="font-medium">Price per night</p>
                 <p className="text-sm text-muted-foreground">
                   {adults} {adults === 1 ? 'adult' : 'adults'}
                   {children > 0 && `, ${children} ${children === 1 ? 'child' : 'children'}`}
                   {needsBabyCrib && ', with baby crib'}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">All guests included in base price</p>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-primary">€{currentPrice}</p>
