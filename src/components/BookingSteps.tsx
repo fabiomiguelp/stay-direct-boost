@@ -109,7 +109,7 @@ export const BookingSteps = () => {
       {/* Progress Steps */}
       <div className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-center space-x-1 sm:space-x-4 md:space-x-8 overflow-x-auto">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-4 md:space-x-8 overflow-x-auto md:overflow-x-visible">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center flex-shrink-0">
                 <button
