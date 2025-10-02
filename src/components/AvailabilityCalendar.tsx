@@ -68,8 +68,13 @@ export const AvailabilityCalendar = ({ onContinue }: AvailabilityCalendarProps) 
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            listing_id: "106063-11881",
-            channel_type: "booking_site",
+            property_ids: "12098462",
+            listings: [
+              {
+                channel_type: "booking_site",
+                listing_id: "106063-11881"
+              }
+            ],
             start_date: startDate,
             end_date: endDate
           })
