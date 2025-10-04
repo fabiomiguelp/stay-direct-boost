@@ -1,6 +1,5 @@
 import {useState, useEffect} from "react";
 import {Button} from "@/components/ui/button";
-import {loadStripe, Stripe} from '@stripe/stripe-js';
 import {Check, Calendar, Home, CheckCircle} from "lucide-react";
 import {HeroSection} from "./HeroSection";
 import {AvailabilityCalendar} from "./AvailabilityCalendar";
@@ -16,9 +15,6 @@ const steps = [
 ];
 
 export const BookingSteps = () => {
-
-    const stripePromise: Promise<Stripe | null> = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
-
     const [currentStep, setCurrentStep] = useState(1);
     const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | null>(null);
     const [bookingData, setBookingData] = useState({
