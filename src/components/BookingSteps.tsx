@@ -123,7 +123,16 @@ export const BookingSteps = () => {
                         <RoomSelection
                             totalAmount={bookingData.totalAmount}
                             nights={bookingData.nights}
-                            onContinue={() => setCurrentStep(3)}
+                            onContinue={(guests) => {
+                                setBookingData(prev => ({
+                                    ...prev,
+                                    adults: guests.adults,
+                                    children: guests.children,
+                                    baby: guests.baby,
+                                    babyCrib: guests.babyCrib
+                                }));
+                                setCurrentStep(3);
+                            }}
                         />
                     </div>
                 );
@@ -138,11 +147,7 @@ export const BookingSteps = () => {
                                     customerPhone: details.phone,
                                     customerFirstName: details.firstName,
                                     customerLastName: details.lastName,
-                                    customerCountry: details.country,
-                                    adults: details.adults,
-                                    children: details.children,
-                                    baby: details.baby,
-                                    babyCrib: details.babyCrib
+                                    customerCountry: details.country
                                 }));
 
                                 try {
@@ -157,10 +162,10 @@ export const BookingSteps = () => {
                                         firstName: details.firstName,
                                         lastName: details.lastName,
                                         country: details.country,
-                                        adults: details.adults,
-                                        children: details.children,
-                                        baby: details.baby,
-                                        babyCrib: details.babyCrib
+                                        adults: bookingData.adults,
+                                        children: bookingData.children,
+                                        baby: bookingData.baby,
+                                        babyCrib: bookingData.babyCrib
                                     };
 
                                     console.log('Sending to API:', payload);

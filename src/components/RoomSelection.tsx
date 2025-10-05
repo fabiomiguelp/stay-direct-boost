@@ -10,7 +10,7 @@ import {Wifi, Car, Coffee, Users, Bed, Maximize, Baby, Minus, Plus} from "lucide
 interface RoomSelectionProps {
     totalAmount: number;
     nights: number;
-    onContinue?: () => void;
+    onContinue?: (guests: { adults: number; children: number; baby: number; babyCrib: boolean }) => void;
 }
 
 // Accommodation data for T1 house
@@ -34,6 +34,7 @@ const amenityIcons: { [key: string]: React.ReactNode } = {
 export const RoomSelection = ({totalAmount, nights, onContinue}: RoomSelectionProps) => {
     const [adults, setAdults] = useState<number>(2);
     const [children, setChildren] = useState<number>(0);
+    const [baby, setBaby] = useState<number>(0);
     const [needsBabyCrib, setNeedsBabyCrib] = useState<boolean>(false);
 
     const totalGuests = adults + children;
@@ -181,6 +182,34 @@ export const RoomSelection = ({totalAmount, nights, onContinue}: RoomSelectionPr
                         </div>
                     </div>
 
+                    {/* Baby Selection */}
+                    <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+                        <div>
+                            <p className="font-semibold text-lg">Baby</p>
+                            <p className="text-sm text-muted-foreground">Age 0-2 (not counted in max guests)</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setBaby(prev => Math.max(0, prev - 1))}
+                                disabled={baby <= 0}
+                                className="h-10 w-10 rounded-full"
+                            >
+                                <Minus className="h-4 w-4"/>
+                            </Button>
+                            <span className="text-xl font-semibold w-8 text-center">{baby}</span>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setBaby(prev => prev + 1)}
+                                className="h-10 w-10 rounded-full"
+                            >
+                                <Plus className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    </div>
+
                     {/* Baby Crib Option */}
                     <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                         <div className="flex items-center gap-3">
@@ -208,6 +237,7 @@ export const RoomSelection = ({totalAmount, nights, onContinue}: RoomSelectionPr
                                 <p className="text-sm text-muted-foreground">
                                     {adults} {adults === 1 ? 'adult' : 'adults'}
                                     {children > 0 && `, ${children} ${children === 1 ? 'child' : 'children'}`}
+                                    {baby > 0 && `, ${baby} ${baby === 1 ? 'baby' : 'babies'}`}
                                     {needsBabyCrib && ', with baby crib'}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">All guests included</p>
@@ -226,7 +256,7 @@ export const RoomSelection = ({totalAmount, nights, onContinue}: RoomSelectionPr
                 <Button
                     className="bg-gradient-primary hover:shadow-card-hover transition-all duration-300 text-lg font-semibold px-12 py-4 h-auto"
                     size="lg"
-                    onClick={onContinue}
+                    onClick={() => onContinue?.({ adults, children, baby, babyCrib: needsBabyCrib })}
                 >
                     Continue to Your Details
                 </Button>
