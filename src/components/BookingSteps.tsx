@@ -128,10 +128,9 @@ export const BookingSteps = () => {
                                     const data = await response.json();
                                     console.log('API Response:', data);
 
-                                    if (data.sessionId) {
-                                        const stripeUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
-                                        console.log('Redirecting to:', stripeUrl);
-                                        window.location.href = stripeUrl;
+                                    if (data.sessionUrl) {
+                                        console.log('Redirecting to:', data.sessionUrl);
+                                        window.location.href = data.sessionUrl;
                                     }
                                 } catch (error) {
                                     console.error('Error creating checkout session:', error);
