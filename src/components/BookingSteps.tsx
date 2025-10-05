@@ -35,13 +35,45 @@ export const BookingSteps = () => {
     // Check for return from Stripe
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const status = params.get('payment');
-        if (status === 'success') {
-            setPaymentStatus('success');
-            setCurrentStep(4);
-        } else if (status === 'error' || status === 'canceled') {
-            setPaymentStatus('error');
-            setCurrentStep(4);
+        const sessionId = params.get('session_id');
+        
+        if (sessionId) {
+            // Verify payment with backend
+            fetch(`http://localhost:8000/api/verify-payment?session_id=${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.hostex_reservation?.error_code === 200) {
+                        setPaymentStatus('success');
+                        // Update booking data with actual values from API
+                        setBookingData({
+                            totalAmount: data.session.amount_total / 100, // Convert cents to dollars
+                            nights: parseInt(data.session.metadata.nights),
+                            checkInDate: data.session.metadata.check_in_date,
+                            checkOutDate: data.session.metadata.check_out_date,
+                            roomType: data.session.metadata.room_type,
+                            customerEmail: data.session.customer_email,
+                            customerPhone: data.session.metadata.mobile,
+                            customerFirstName: data.session.customer_name.split(' ')[0],
+                            customerLastName: data.session.customer_name.split(' ').slice(1).join(' '),
+                            customerCountry: data.session.metadata.country
+                        });
+                        setCurrentStep(4);
+                    } else {
+                        setPaymentStatus('error');
+                        setCurrentStep(4);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verifying payment:', error);
+                    setPaymentStatus('error');
+                    setCurrentStep(4);
+                });
+        } else {
+            const status = params.get('payment');
+            if (status === 'error' || status === 'canceled') {
+                setPaymentStatus('error');
+                setCurrentStep(4);
+            }
         }
     }, []);
 
