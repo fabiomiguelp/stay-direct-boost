@@ -1,9 +1,10 @@
 import {useState, useEffect} from "react";
 import {Button} from "@/components/ui/button";
-import {Check, Calendar, Home, CheckCircle} from "lucide-react";
+import {Check, Calendar, Home, User, CheckCircle} from "lucide-react";
 import {HeroSection} from "./HeroSection";
 import {AvailabilityCalendar} from "./AvailabilityCalendar";
 import {RoomSelection} from "./RoomSelection";
+import {CustomerDetailsForm} from "./CustomerDetailsForm";
 import {PaymentSuccess} from "./PaymentSuccess";
 import {FloatingWhatsAppButton} from "./FloatingWhatsAppButton";
 import {Footer} from "./Footer";
@@ -11,7 +12,8 @@ import {Footer} from "./Footer";
 const steps = [
     {id: 1, name: "Select Dates", icon: Calendar, description: "Choose your stay dates"},
     {id: 2, name: "Choose Room", icon: Home, description: "Pick your perfect room"},
-    {id: 3, name: "Confirmation", icon: CheckCircle, description: "Booking confirmed"}
+    {id: 3, name: "Your Details", icon: User, description: "Enter your information"},
+    {id: 4, name: "Confirmation", icon: CheckCircle, description: "Booking confirmed"}
 ];
 
 export const BookingSteps = () => {
@@ -23,7 +25,10 @@ export const BookingSteps = () => {
         checkInDate: "",
         checkOutDate: "",
         roomType: "",
-        customerEmail: ""
+        customerEmail: "",
+        customerPhone: "",
+        customerFirstName: "",
+        customerLastName: ""
     });
 
     // Check for return from Stripe
@@ -32,10 +37,10 @@ export const BookingSteps = () => {
         const status = params.get('payment');
         if (status === 'success') {
             setPaymentStatus('success');
-            setCurrentStep(3);
+            setCurrentStep(4);
         } else if (status === 'error' || status === 'canceled') {
             setPaymentStatus('error');
-            setCurrentStep(3);
+            setCurrentStep(4);
         }
     }, []);
 
@@ -53,7 +58,10 @@ export const BookingSteps = () => {
                                     checkInDate: data.checkInDate,
                                     checkOutDate: data.checkOutDate,
                                     roomType: "",
-                                    customerEmail: ""
+                                    customerEmail: "",
+                                    customerPhone: "",
+                                    customerFirstName: "",
+                                    customerLastName: ""
                                 });
                                 setCurrentStep(2);
                             }}
@@ -66,34 +74,61 @@ export const BookingSteps = () => {
                         <RoomSelection
                             totalAmount={bookingData.totalAmount}
                             nights={bookingData.nights}
-                            onContinue={async () => {
+                            onContinue={() => setCurrentStep(3)}
+                        />
+                    </div>
+                );
+            case 3:
+                return (
+                    <div className="space-y-8">
+                        <CustomerDetailsForm
+                            onContinue={async (details) => {
+                                setBookingData(prev => ({
+                                    ...prev,
+                                    customerEmail: details.email,
+                                    customerPhone: details.phone,
+                                    customerFirstName: details.firstName,
+                                    customerLastName: details.lastName
+                                }));
+
                                 try {
+                                    const payload = {
+                                        totalAmount: bookingData.totalAmount,
+                                        nights: bookingData.nights,
+                                        checkInDate: bookingData.checkInDate,
+                                        checkOutDate: bookingData.checkOutDate,
+                                        roomType: "T1 House with Sofa Bed",
+                                        customerEmail: details.email,
+                                        mobile: details.phone,
+                                        firstName: details.firstName,
+                                        lastName: details.lastName
+                                    };
+
+                                    console.log('Sending to API:', payload);
+
                                     const response = await fetch('http://localhost:8000/api/create-checkout-session', {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
                                         },
-                                        body: JSON.stringify({
-                                            totalAmount: bookingData.totalAmount,
-                                            nights: bookingData.nights,
-                                            checkInDate: bookingData.checkInDate,
-                                            checkOutDate: bookingData.checkOutDate,
-                                            roomType: "Deluxe Suite",
-                                            customerEmail: "test@example.com"
-                                        }),
+                                        body: JSON.stringify(payload),
                                     });
+
+                                    console.log('Response status:', response.status);
+                                    console.log('Response headers:', response.headers);
 
                                     if (!response.ok) {
                                         throw new Error(`HTTP error! status: ${response.status}`);
                                     }
 
-                                    const {sessionUrl} = await response.json();
+                                    const data = await response.json();
+                                    console.log('API Response:', data);
 
-
-                                    // Redirect to Stripe Checkout
-                                    window.location.href = sessionUrl;
-
-
+                                    if (data.sessionId) {
+                                        const stripeUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+                                        console.log('Redirecting to:', stripeUrl);
+                                        window.location.href = stripeUrl;
+                                    }
                                 } catch (error) {
                                     console.error('Error creating checkout session:', error);
                                 }
@@ -101,7 +136,7 @@ export const BookingSteps = () => {
                         />
                     </div>
                 );
-            case 3:
+            case 4:
                 return (
                     <PaymentSuccess
                         paymentStatus={paymentStatus || 'success'}
@@ -112,6 +147,17 @@ export const BookingSteps = () => {
                         onNewBooking={() => {
                             setCurrentStep(1);
                             setPaymentStatus(null);
+                            setBookingData({
+                                totalAmount: 0,
+                                nights: 0,
+                                checkInDate: "",
+                                checkOutDate: "",
+                                roomType: "",
+                                customerEmail: "",
+                                customerPhone: "",
+                                customerFirstName: "",
+                                customerLastName: ""
+                            });
                             window.history.replaceState({}, '', '/');
                         }}
                     />

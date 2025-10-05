@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Globe } from "lucide-react";
+import { User, Mail, Globe, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CustomerDetails {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   country: string;
 }
 
@@ -29,6 +30,7 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     country: ""
   });
   const [errors, setErrors] = useState<Partial<CustomerDetails>>({});
@@ -47,6 +49,11 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phone.replace(/[\s()-]/g, ''))) {
+      newErrors.phone = "Please enter a valid phone number";
     }
     if (!formData.country) {
       newErrors.country = "Please select your country";
@@ -136,6 +143,24 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="flex items-center gap-2">
+              <Phone className="h-4 w-4" />
+              Phone Number
+            </Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => updateField("phone", e.target.value)}
+              className={errors.phone ? "border-destructive" : ""}
+              placeholder="+1 (555) 123-4567"
+            />
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone}</p>
             )}
           </div>
 
