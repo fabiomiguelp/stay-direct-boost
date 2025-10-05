@@ -8,6 +8,7 @@ interface PaymentSuccessProps {
   nights: number;
   checkInDate?: string;
   checkOutDate?: string;
+  bookingReference?: string;
   onNewBooking: () => void;
 }
 
@@ -17,9 +18,10 @@ export const PaymentSuccess = ({
   nights,
   checkInDate,
   checkOutDate,
+  bookingReference: bookingReferenceProp,
   onNewBooking 
 }: PaymentSuccessProps) => {
-  const bookingReference = `PRR-${Date.now().toString().slice(-8)}`;
+  const bookingReference = bookingReferenceProp || `PRR-${Date.now().toString().slice(-8)}`;
 
   if (paymentStatus === 'error') {
     return (
@@ -87,7 +89,7 @@ export const PaymentSuccess = ({
             </div>
             <div className="flex justify-between items-center py-3">
               <span className="text-muted-foreground">Total Amount</span>
-              <span className="text-2xl font-bold text-primary">${totalAmount}</span>
+              <span className="text-2xl font-bold text-primary">€{totalAmount.toFixed(2)}</span>
             </div>
           </div>
         </Card>

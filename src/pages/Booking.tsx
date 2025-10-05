@@ -8,6 +8,13 @@ const Booking = () => {
     const navigate = useNavigate();
     const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [bookingData, setBookingData] = useState({
+        bookingReference: '',
+        totalAmount: 0,
+        nights: 0,
+        checkInDate: '',
+        checkOutDate: ''
+    });
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -28,6 +35,13 @@ const Booking = () => {
                     console.log('Verify payment response:', data);
                     if (data.status === 'success' && data.hostex_reservation?.error_code === 200) {
                         setPaymentStatus('success');
+                        setBookingData({
+                            bookingReference: data.session.metadata.booking_reference || '',
+                            totalAmount: data.session.amount_total / 100, // Convert cents to euros
+                            nights: parseInt(data.session.metadata.nights),
+                            checkInDate: data.session.metadata.check_in_date,
+                            checkOutDate: data.session.metadata.check_out_date
+                        });
                     } else {
                         setPaymentStatus('error');
                     }
@@ -65,10 +79,11 @@ const Booking = () => {
         <div className="min-h-screen bg-background">
             <PaymentSuccess
                 paymentStatus={paymentStatus}
-                totalAmount={0}
-                nights={0}
-                checkInDate=""
-                checkOutDate=""
+                totalAmount={bookingData.totalAmount}
+                nights={bookingData.nights}
+                checkInDate={bookingData.checkInDate}
+                checkOutDate={bookingData.checkOutDate}
+                bookingReference={bookingData.bookingReference}
                 onNewBooking={handleNewBooking}
             />
             <FloatingWhatsAppButton/>

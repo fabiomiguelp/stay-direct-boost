@@ -29,7 +29,8 @@ export const BookingSteps = () => {
         customerPhone: "",
         customerFirstName: "",
         customerLastName: "",
-        customerCountry: ""
+        customerCountry: "",
+        bookingReference: ""
     });
 
     // Check for return from Stripe
@@ -55,7 +56,8 @@ export const BookingSteps = () => {
                             customerPhone: data.session.metadata.mobile,
                             customerFirstName: data.session.customer_name.split(' ')[0],
                             customerLastName: data.session.customer_name.split(' ').slice(1).join(' '),
-                            customerCountry: data.session.metadata.country
+                            customerCountry: data.session.metadata.country,
+                            bookingReference: data.session.metadata.booking_reference || ''
                         });
                         setCurrentStep(4);
                     } else {
@@ -95,7 +97,8 @@ export const BookingSteps = () => {
                                     customerPhone: "",
                                     customerFirstName: "",
                                     customerLastName: "",
-                                    customerCountry: ""
+                                    customerCountry: "",
+                                    bookingReference: ""
                                 });
                                 setCurrentStep(2);
                             }}
@@ -179,6 +182,7 @@ export const BookingSteps = () => {
                         nights={bookingData.nights}
                         checkInDate={bookingData.checkInDate}
                         checkOutDate={bookingData.checkOutDate}
+                        bookingReference={bookingData.bookingReference}
                         onNewBooking={() => {
                             setCurrentStep(1);
                             setPaymentStatus(null);
@@ -192,7 +196,8 @@ export const BookingSteps = () => {
                                 customerPhone: "",
                                 customerFirstName: "",
                                 customerLastName: "",
-                                customerCountry: ""
+                                customerCountry: "",
+                                bookingReference: ""
                             });
                             window.history.replaceState({}, '', '/');
                         }}
