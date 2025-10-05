@@ -18,10 +18,25 @@ const Booking = () => {
             allParams: Object.fromEntries(urlParams.entries())
         });
 
-
         setSessionId(sessionIdParam);
 
-        if (paymentParam === 'success') {
+        if (sessionIdParam) {
+            // Verify payment with backend
+            fetch(`http://localhost:8000/api/verify-payment?session_id=${sessionIdParam}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Verify payment response:', data);
+                    if (data.status === 'success' && data.hostex_reservation?.error_code === 200) {
+                        setPaymentStatus('success');
+                    } else {
+                        setPaymentStatus('error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verifying payment:', error);
+                    setPaymentStatus('error');
+                });
+        } else if (paymentParam === 'success') {
             setPaymentStatus('success');
         } else if (paymentParam === 'canceled') {
             setPaymentStatus('error');
