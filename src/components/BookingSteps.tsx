@@ -30,7 +30,11 @@ export const BookingSteps = () => {
         customerFirstName: "",
         customerLastName: "",
         customerCountry: "",
-        bookingReference: ""
+        bookingReference: "",
+        adults: 1,
+        children: 0,
+        baby: 0,
+        babyCrib: false
     });
 
     // Check for return from Stripe
@@ -57,7 +61,11 @@ export const BookingSteps = () => {
                             customerFirstName: data.session.customer_name.split(' ')[0],
                             customerLastName: data.session.customer_name.split(' ').slice(1).join(' '),
                             customerCountry: data.session.metadata.country,
-                            bookingReference: data.session.metadata.booking_reference || ''
+                            bookingReference: data.session.metadata.booking_reference || '',
+                            adults: parseInt(data.session.metadata.adults) || 1,
+                            children: parseInt(data.session.metadata.children) || 0,
+                            baby: parseInt(data.session.metadata.baby) || 0,
+                            babyCrib: data.session.metadata.babyCrib === 'true' || data.session.metadata.babyCrib === true
                         });
                         setCurrentStep(4);
                     } else {
@@ -98,7 +106,11 @@ export const BookingSteps = () => {
                                     customerFirstName: "",
                                     customerLastName: "",
                                     customerCountry: "",
-                                    bookingReference: ""
+                                    bookingReference: "",
+                                    adults: 1,
+                                    children: 0,
+                                    baby: 0,
+                                    babyCrib: false
                                 });
                                 setCurrentStep(2);
                             }}
@@ -126,7 +138,11 @@ export const BookingSteps = () => {
                                     customerPhone: details.phone,
                                     customerFirstName: details.firstName,
                                     customerLastName: details.lastName,
-                                    customerCountry: details.country
+                                    customerCountry: details.country,
+                                    adults: details.adults,
+                                    children: details.children,
+                                    baby: details.baby,
+                                    babyCrib: details.babyCrib
                                 }));
 
                                 try {
@@ -140,7 +156,11 @@ export const BookingSteps = () => {
                                         mobile: details.phone,
                                         firstName: details.firstName,
                                         lastName: details.lastName,
-                                        country: details.country
+                                        country: details.country,
+                                        adults: details.adults,
+                                        children: details.children,
+                                        baby: details.baby,
+                                        babyCrib: details.babyCrib
                                     };
 
                                     console.log('Sending to API:', payload);
@@ -197,7 +217,11 @@ export const BookingSteps = () => {
                                 customerFirstName: "",
                                 customerLastName: "",
                                 customerCountry: "",
-                                bookingReference: ""
+                                bookingReference: "",
+                                adults: 1,
+                                children: 0,
+                                baby: 0,
+                                babyCrib: false
                             });
                             window.history.replaceState({}, '', '/');
                         }}

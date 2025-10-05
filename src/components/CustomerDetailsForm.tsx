@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Globe, Phone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { User, Mail, Globe, Phone, Users, Baby } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CustomerDetails {
@@ -13,6 +14,10 @@ interface CustomerDetails {
   email: string;
   phone: string;
   country: string;
+  adults: number;
+  children: number;
+  baby: number;
+  babyCrib: boolean;
 }
 
 interface CustomerDetailsFormProps {
@@ -31,13 +36,17 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
     lastName: "",
     email: "",
     phone: "",
-    country: ""
+    country: "",
+    adults: 1,
+    children: 0,
+    baby: 0,
+    babyCrib: false
   });
-  const [errors, setErrors] = useState<Partial<CustomerDetails>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof CustomerDetails, string>>>({});
   const { toast } = useToast();
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<CustomerDetails> = {};
+    const newErrors: Partial<Record<keyof CustomerDetails, string>> = {};
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
@@ -57,6 +66,9 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
     }
     if (!formData.country) {
       newErrors.country = "Please select your country";
+    }
+    if (formData.adults < 1) {
+      newErrors.adults = "At least 1 adult is required";
     }
 
     setErrors(newErrors);
@@ -184,6 +196,74 @@ export const CustomerDetailsForm = ({ onContinue }: CustomerDetailsFormProps) =>
             {errors.country && (
               <p className="text-sm text-destructive">{errors.country}</p>
             )}
+          </div>
+
+          <div className="space-y-4 border-t pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Guests Information</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="adults">Adults</Label>
+                <Input
+                  id="adults"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.adults}
+                  onChange={(e) => setFormData(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
+                  className={errors.adults ? "border-destructive" : ""}
+                />
+                {errors.adults && (
+                  <p className="text-sm text-destructive">{errors.adults}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="children">Children</Label>
+                <Input
+                  id="children"
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={formData.children}
+                  onChange={(e) => setFormData(prev => ({ ...prev, children: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="baby" className="flex items-center gap-2">
+                  <Baby className="h-4 w-4" />
+                  Baby
+                </Label>
+                <Input
+                  id="baby"
+                  type="number"
+                  min="0"
+                  max="5"
+                  value={formData.baby}
+                  onChange={(e) => setFormData(prev => ({ ...prev, baby: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="babyCrib" className="text-base font-medium">
+                  Baby Crib Required?
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  We'll provide a baby crib for your stay
+                </p>
+              </div>
+              <Switch
+                id="babyCrib"
+                checked={formData.babyCrib}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, babyCrib: checked }))}
+              />
+            </div>
           </div>
 
           <div className="pt-4">
