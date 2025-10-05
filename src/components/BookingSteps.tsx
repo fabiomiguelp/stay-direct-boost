@@ -28,7 +28,8 @@ export const BookingSteps = () => {
         customerEmail: "",
         customerPhone: "",
         customerFirstName: "",
-        customerLastName: ""
+        customerLastName: "",
+        customerCountry: ""
     });
 
     // Check for return from Stripe
@@ -61,7 +62,8 @@ export const BookingSteps = () => {
                                     customerEmail: "",
                                     customerPhone: "",
                                     customerFirstName: "",
-                                    customerLastName: ""
+                                    customerLastName: "",
+                                    customerCountry: ""
                                 });
                                 setCurrentStep(2);
                             }}
@@ -88,7 +90,8 @@ export const BookingSteps = () => {
                                     customerEmail: details.email,
                                     customerPhone: details.phone,
                                     customerFirstName: details.firstName,
-                                    customerLastName: details.lastName
+                                    customerLastName: details.lastName,
+                                    customerCountry: details.country
                                 }));
 
                                 try {
@@ -101,7 +104,8 @@ export const BookingSteps = () => {
                                         customerEmail: details.email,
                                         mobile: details.phone,
                                         firstName: details.firstName,
-                                        lastName: details.lastName
+                                        lastName: details.lastName,
+                                        country: details.country
                                     };
 
                                     console.log('Sending to API:', payload);
@@ -156,7 +160,8 @@ export const BookingSteps = () => {
                                 customerEmail: "",
                                 customerPhone: "",
                                 customerFirstName: "",
-                                customerLastName: ""
+                                customerLastName: "",
+                                customerCountry: ""
                             });
                             window.history.replaceState({}, '', '/');
                         }}
