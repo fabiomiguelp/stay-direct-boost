@@ -37,7 +37,7 @@ const Booking = () => {
                         setPaymentStatus('success');
                         setBookingData({
                             bookingReference: data.session.metadata.booking_reference || '',
-                            totalAmount: data.session.amount_total / 100, // Convert cents to euros
+                            totalAmount: data.session.amount_total, // Convert cents to euros
                             nights: parseInt(data.session.metadata.nights),
                             checkInDate: data.session.metadata.check_in_date,
                             checkOutDate: data.session.metadata.check_out_date

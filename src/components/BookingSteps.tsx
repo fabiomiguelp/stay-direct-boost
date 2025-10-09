@@ -156,7 +156,7 @@ export const BookingSteps = () => {
                                         nights: bookingData.nights,
                                         checkInDate: bookingData.checkInDate,
                                         checkOutDate: bookingData.checkOutDate,
-                                        roomType: "T1 House with Sofa Bed",
+                                        roomType: "Central Charm Azores - T1 with sofa bed",
                                         customerEmail: details.email,
                                         mobile: details.phone,
                                         firstName: details.firstName,
