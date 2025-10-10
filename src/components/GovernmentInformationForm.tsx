@@ -114,11 +114,11 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
       {persons.map((person, index) => (
-        <div key={index} className="space-y-4">
+        <div key={index} className="space-y-3 md:space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-base md:text-lg font-semibold text-foreground">
               Person {index + 1}
             </h3>
             {persons.length > 1 && (
@@ -238,18 +238,18 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
         </div>
       ))}
 
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={addPerson}
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
         >
           <PlusCircle className="w-4 h-4" />
           Add Another Person
         </Button>
 
-        <Button type="submit" size="lg">
+        <Button type="submit" size="lg" className="w-full sm:w-auto">
           Submit Information
         </Button>
       </div>
