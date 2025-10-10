@@ -84,7 +84,16 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
 
   const updatePerson = (index: number, field: string, value: string) => {
     const updatedPersons = [...persons];
-    updatedPersons[index] = { ...updatedPersons[index], [field]: value };
+    
+    // If updating check-in or check-out dates, apply to all persons
+    if (field === "checkInDate" || field === "checkOutDate") {
+      updatedPersons.forEach((person, i) => {
+        updatedPersons[i] = { ...updatedPersons[i], [field]: value };
+      });
+    } else {
+      updatedPersons[index] = { ...updatedPersons[index], [field]: value };
+    }
+    
     setPersons(updatedPersons);
   };
 
