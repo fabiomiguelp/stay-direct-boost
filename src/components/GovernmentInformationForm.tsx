@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle } from "lucide-react";
+import { PlusCircle, MinusCircle, Loader2 } from "lucide-react";
 
 const personSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -47,6 +47,7 @@ const documentTypes = [
 
 const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps) => {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [persons, setPersons] = useState([
     {
       fullName: "",
@@ -59,6 +60,66 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
       checkOutDate: "",
     },
   ]);
+
+  useEffect(() => {
+    const fetchReservationData = async () => {
+      try {
+        setIsLoading(true);
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const apiToken = import.meta.env.VITE_API_TOKEN || '';
+        
+        const response = await fetch(`${apiBaseUrl}/api/reservation/${bookingId}`, {
+          headers: {
+            'x-api-token': apiToken,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch reservation data');
+        }
+
+        const data = await response.json();
+        
+        if (data.data?.reservations?.[0]) {
+          const reservation = data.data.reservations[0];
+          const guests = reservation.guests || [];
+          
+          // Pre-populate persons based on number of guests or adults
+          const numberOfGuests = Math.max(guests.length, reservation.number_of_adults || 1);
+          const newPersons = Array.from({ length: numberOfGuests }, (_, index) => {
+            const guest = guests[index];
+            return {
+              fullName: guest?.name || (index === 0 ? reservation.guest_name : ""),
+              birthday: "",
+              nationality: guest?.country || "",
+              documentType: "",
+              documentNumber: "",
+              documentCountry: guest?.country || "",
+              checkInDate: reservation.check_in_date || "",
+              checkOutDate: reservation.check_out_date || "",
+            };
+          });
+          
+          setPersons(newPersons);
+        }
+      } catch (error) {
+        console.error('Error fetching reservation:', error);
+        toast({
+          title: "Could not load reservation data",
+          description: "Please fill in the form manually.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (bookingId) {
+      fetchReservationData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [bookingId, toast]);
 
   const addPerson = () => {
     setPersons([
@@ -121,6 +182,14 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
