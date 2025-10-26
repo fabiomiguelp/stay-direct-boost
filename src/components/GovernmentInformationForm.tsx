@@ -1,354 +1,384 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {useState, useEffect} from "react";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, Loader2 } from "lucide-react";
+import {useToast} from "@/hooks/use-toast";
+import {Separator} from "@/components/ui/separator";
+import {PlusCircle, MinusCircle, Loader2} from "lucide-react";
 
 const personSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  birthday: z.string().min(1, "Birthday is required"),
-  nationality: z.string().min(2, "Nationality is required"),
-  documentType: z.string().min(1, "Document type is required"),
-  documentNumber: z.string().min(1, "Document number is required"),
-  documentCountry: z.string().min(2, "Document issuing country is required"),
-  checkInDate: z.string().min(1, "Check-in date is required"),
-  checkOutDate: z.string().min(1, "Check-out date is required"),
+    fullName: z.string().min(2, "Full name is required"),
+    birthday: z.string().min(1, "Birthday is required"),
+    nationality: z.string().min(2, "Nationality is required"),
+    documentType: z.string().min(1, "Document type is required"),
+    documentNumber: z.string().min(1, "Document number is required"),
+    documentCountry: z.string().min(2, "Document issuing country is required"),
+    checkInDate: z.string().min(1, "Check-in date is required"),
+    checkOutDate: z.string().min(1, "Check-out date is required"),
 });
 
 const formSchema = z.object({
-  persons: z.array(personSchema).min(1, "At least one person is required"),
+    persons: z.array(personSchema).min(1, "At least one person is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface GovernmentInformationFormProps {
-  bookingId: string;
+    bookingId: string;
 }
 
 const documentTypes = [
-  { value: "passport", label: "Passport" },
-  { value: "citizen_card", label: "Citizen Card" },
-  { value: "id_card", label: "ID Card" },
-  { value: "drivers_license", label: "Driver's License" },
-  { value: "other", label: "Other" },
+    {value: "passport", label: "Passport"},
+    {value: "citizen_card", label: "Citizen Card"},
+    {value: "id_card", label: "ID Card"},
+    {value: "drivers_license", label: "Driver's License"},
+    {value: "other", label: "Other"},
 ];
 
-const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps) => {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [persons, setPersons] = useState([
-    {
-      fullName: "",
-      birthday: "",
-      nationality: "",
-      documentType: "",
-      documentNumber: "",
-      documentCountry: "",
-      checkInDate: "",
-      checkOutDate: "",
-    },
-  ]);
+// Country code to name mapping (you might want to expand this)
+const countryCodes: { [key: string]: string } = {
+    'ZA': 'South Africa',
+    // Add more country codes as needed
+};
 
-  useEffect(() => {
-    const fetchReservationData = async () => {
-      try {
-        setIsLoading(true);
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        const apiToken = import.meta.env.VITE_API_TOKEN || '';
-        
-        console.log('Fetching reservation data for bookingId:', bookingId);
-        console.log('API URL:', `${apiBaseUrl}/api/reservation/${bookingId}`);
-        
-        const response = await fetch(`${apiBaseUrl}/api/reservation/${bookingId}`, {
-          headers: {
-            'x-api-token': apiToken,
-          },
-        });
+const GovernmentInformationForm = ({bookingId}: GovernmentInformationFormProps) => {
+    const {toast} = useToast();
+    const [isLoading, setIsLoading] = useState(true);
+    const [persons, setPersons] = useState([
+        {
+            fullName: "",
+            birthday: "",
+            nationality: "",
+            documentType: "",
+            documentNumber: "",
+            documentCountry: "",
+            checkInDate: "",
+            checkOutDate: "",
+        },
+    ]);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch reservation data');
-        }
+    useEffect(() => {
+        const fetchReservationData = async () => {
+            try {
+                setIsLoading(true);
+                const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+                const apiToken = import.meta.env.VITE_API_TOKEN || '';
 
-        const data = await response.json();
-        console.log('Received reservation data:', data);
-        
-        if (data.data?.reservations?.[0]) {
-          const reservation = data.data.reservations[0];
-          const guests = reservation.guests || [];
-          
-          console.log('Reservation:', reservation);
-          console.log('Guests:', guests);
-          console.log('Number of adults:', reservation.number_of_adults);
-          
-          // Pre-populate persons based on number of guests or adults
-          const numberOfGuests = Math.max(guests.length, reservation.number_of_adults || 1);
-          console.log('Creating forms for', numberOfGuests, 'guests');
-          
-          const newPersons = Array.from({ length: numberOfGuests }, (_, index) => {
-            const guest = guests[index];
-            const personData = {
-              fullName: guest?.name || (index === 0 ? reservation.guest_name : ""),
-              birthday: "",
-              nationality: guest?.country || "",
-              documentType: "",
-              documentNumber: "",
-              documentCountry: guest?.country || "",
-              checkInDate: reservation.check_in_date || "",
-              checkOutDate: reservation.check_out_date || "",
-            };
-            console.log(`Person ${index + 1} data:`, personData);
-            return personData;
-          });
-          
-          console.log('Setting persons state:', newPersons);
-          setPersons(newPersons);
+                console.log('Fetching reservation data for bookingId:', bookingId);
+                console.log('API URL:', `${apiBaseUrl}/api/reservation/${bookingId}`);
+
+                const response = await fetch(`${apiBaseUrl}/api/reservation/${bookingId}`, {
+                    headers: {
+                        'x-api-token': apiToken,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch reservation data');
+                }
+
+                const data = await response.json();
+                console.log('Received reservation data:', data);
+
+                if (data) {
+                    const reservation = data;
+                    const guests = reservation.guests || [];
+
+                    console.log('Reservation:', reservation);
+                    console.log('Guests:', guests);
+                    console.log('Number of adults:', reservation.number_of_adults);
+
+                    // Find the main booker (is_booker: true) or use the first guest
+                    const mainBooker = guests.find((guest: any) => guest.is_booker) || guests[0];
+                    const guestName = mainBooker?.name || reservation.guest_name;
+                    const guestCountry = mainBooker?.country || '';
+                    const nationality = countryCodes[guestCountry] || guestCountry;
+
+                    console.log('Main booker:', mainBooker);
+                    console.log('Guest name:', guestName);
+                    console.log('Guest country:', guestCountry);
+                    console.log('Nationality:', nationality);
+
+                    // Pre-populate persons based on number of adults
+                    const numberOfPersons = reservation.number_of_adults || 1;
+                    console.log('Creating forms for', numberOfPersons, 'persons');
+
+                    const newPersons = Array.from({length: numberOfPersons}, (_, index) => {
+                        // For the first person, use the main booker's info
+                        if (index === 0) {
+                            return {
+                                fullName: guestName || "",
+                                birthday: "",
+                                nationality: nationality || "",
+                                documentType: "",
+                                documentNumber: "",
+                                documentCountry: nationality || "",
+                                checkInDate: reservation.check_in_date || "",
+                                checkOutDate: reservation.check_out_date || "",
+                            };
+                        } else {
+                            // For additional persons, create empty forms
+                            return {
+                                fullName: "",
+                                birthday: "",
+                                nationality: "",
+                                documentType: "",
+                                documentNumber: "",
+                                documentCountry: "",
+                                checkInDate: reservation.check_in_date || "",
+                                checkOutDate: reservation.check_out_date || "",
+                            };
+                        }
+                    });
+
+                    console.log('Setting persons state:', newPersons);
+                    setPersons(newPersons);
+                } else {
+                    console.log('No reservation data found in response');
+                    // If no data, keep the default empty form
+                }
+            } catch (error) {
+                console.error('Error fetching reservation:', error);
+                toast({
+                    title: "Could not load reservation data",
+                    description: "Please fill in the form manually.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (bookingId) {
+            fetchReservationData();
         } else {
-          console.log('No reservation data found in response');
+            console.log('No bookingId provided');
+            setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching reservation:', error);
-        toast({
-          title: "Could not load reservation data",
-          description: "Please fill in the form manually.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+    }, [bookingId, toast]);
+
+    const addPerson = () => {
+        setPersons([
+            ...persons,
+            {
+                fullName: "",
+                birthday: "",
+                nationality: "",
+                documentType: "",
+                documentNumber: "",
+                documentCountry: "",
+                checkInDate: persons[0]?.checkInDate || "", // Copy check-in date from first person
+                checkOutDate: persons[0]?.checkOutDate || "", // Copy check-out date from first person
+            },
+        ]);
     };
 
-    if (bookingId) {
-      fetchReservationData();
-    } else {
-      console.log('No bookingId provided');
-      setIsLoading(false);
+    const removePerson = (index: number) => {
+        if (persons.length > 1) {
+            setPersons(persons.filter((_, i) => i !== index));
+        }
+    };
+
+    const updatePerson = (index: number, field: string, value: string) => {
+        const updatedPersons = [...persons];
+
+        // If updating check-in or check-out dates, apply to all persons
+        if (field === "checkInDate" || field === "checkOutDate") {
+            updatedPersons.forEach((person, i) => {
+                updatedPersons[i] = {...updatedPersons[i], [field]: value};
+            });
+        } else {
+            updatedPersons[index] = {...updatedPersons[index], [field]: value};
+        }
+
+        setPersons(updatedPersons);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            // Validate all persons
+            formSchema.parse({persons});
+
+            // Here you would send the data to your backend
+            console.log("Submitting frontier control data:", {bookingId, persons});
+
+            toast({
+                title: "Form submitted successfully",
+                description: "Your frontier control information has been recorded.",
+            });
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                toast({
+                    title: "Validation error",
+                    description: error.errors[0].message,
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+            </div>
+        );
     }
-  }, [bookingId, toast]);
 
-  const addPerson = () => {
-    setPersons([
-      ...persons,
-      {
-        fullName: "",
-        birthday: "",
-        nationality: "",
-        documentType: "",
-        documentNumber: "",
-        documentCountry: "",
-        checkInDate: "",
-        checkOutDate: "",
-      },
-    ]);
-  };
-
-  const removePerson = (index: number) => {
-    if (persons.length > 1) {
-      setPersons(persons.filter((_, i) => i !== index));
-    }
-  };
-
-  const updatePerson = (index: number, field: string, value: string) => {
-    const updatedPersons = [...persons];
-    
-    // If updating check-in or check-out dates, apply to all persons
-    if (field === "checkInDate" || field === "checkOutDate") {
-      updatedPersons.forEach((person, i) => {
-        updatedPersons[i] = { ...updatedPersons[i], [field]: value };
-      });
-    } else {
-      updatedPersons[index] = { ...updatedPersons[index], [field]: value };
-    }
-    
-    setPersons(updatedPersons);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      // Validate all persons
-      formSchema.parse({ persons });
-
-      // Here you would send the data to your backend
-      console.log("Submitting frontier control data:", { bookingId, persons });
-
-      toast({
-        title: "Form submitted successfully",
-        description: "Your frontier control information has been recorded.",
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation error",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            {persons.map((person, index) => (
+                <div key={index} className="space-y-3 md:space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base md:text-lg font-semibold text-foreground">
+                            Person {index + 1}
+                        </h3>
+                        {persons.length > 1 && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePerson(index)}
+                                className="text-destructive"
+                            >
+                                <MinusCircle className="w-4 h-4 mr-1"/>
+                                Remove
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor={`fullName-${index}`}>Full Name *</Label>
+                            <Input
+                                id={`fullName-${index}`}
+                                value={person.fullName}
+                                onChange={(e) => updatePerson(index, "fullName", e.target.value)}
+                                placeholder="John Doe"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`birthday-${index}`}>Birthday *</Label>
+                            <Input
+                                id={`birthday-${index}`}
+                                type="date"
+                                value={person.birthday}
+                                onChange={(e) => updatePerson(index, "birthday", e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`nationality-${index}`}>Nationality *</Label>
+                            <Input
+                                id={`nationality-${index}`}
+                                value={person.nationality}
+                                onChange={(e) => updatePerson(index, "nationality", e.target.value)}
+                                placeholder="Portuguese"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`documentType-${index}`}>Document Type *</Label>
+                            <Select
+                                value={person.documentType}
+                                onValueChange={(value) => updatePerson(index, "documentType", value)}
+                                required
+                            >
+                                <SelectTrigger id={`documentType-${index}`}>
+                                    <SelectValue placeholder="Select document type"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {documentTypes.map((type) => (
+                                        <SelectItem key={type.value} value={type.value}>
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`documentNumber-${index}`}>Document Number *</Label>
+                            <Input
+                                id={`documentNumber-${index}`}
+                                value={person.documentNumber}
+                                onChange={(e) => updatePerson(index, "documentNumber", e.target.value)}
+                                placeholder="AB123456"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`documentCountry-${index}`}>Document Issuing Country *</Label>
+                            <Input
+                                id={`documentCountry-${index}`}
+                                value={person.documentCountry}
+                                onChange={(e) => updatePerson(index, "documentCountry", e.target.value)}
+                                placeholder="Portugal"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`checkInDate-${index}`}>Check-in Date *</Label>
+                            <Input
+                                id={`checkInDate-${index}`}
+                                type="date"
+                                value={person.checkInDate}
+                                onChange={(e) => updatePerson(index, "checkInDate", e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor={`checkOutDate-${index}`}>Check-out Date *</Label>
+                            <Input
+                                id={`checkOutDate-${index}`}
+                                type="date"
+                                value={person.checkOutDate}
+                                onChange={(e) => updatePerson(index, "checkOutDate", e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {index < persons.length - 1 && <Separator className="my-4"/>}
+                </div>
+            ))}
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addPerson}
+                    className="gap-2 w-full sm:w-auto"
+                >
+                    <PlusCircle className="w-4 h-4"/>
+                    Add Another Person
+                </Button>
+
+                <Button type="submit" size="lg" className="w-full sm:w-auto">
+                    Submit Information
+                </Button>
+            </div>
+        </form>
     );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-      {persons.map((person, index) => (
-        <div key={index} className="space-y-3 md:space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base md:text-lg font-semibold text-foreground">
-              Person {index + 1}
-            </h3>
-            {persons.length > 1 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removePerson(index)}
-                className="text-destructive"
-              >
-                <MinusCircle className="w-4 h-4 mr-1" />
-                Remove
-              </Button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor={`fullName-${index}`}>Full Name *</Label>
-              <Input
-                id={`fullName-${index}`}
-                value={person.fullName}
-                onChange={(e) => updatePerson(index, "fullName", e.target.value)}
-                placeholder="John Doe"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`birthday-${index}`}>Birthday *</Label>
-              <Input
-                id={`birthday-${index}`}
-                type="date"
-                value={person.birthday}
-                onChange={(e) => updatePerson(index, "birthday", e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`nationality-${index}`}>Nationality *</Label>
-              <Input
-                id={`nationality-${index}`}
-                value={person.nationality}
-                onChange={(e) => updatePerson(index, "nationality", e.target.value)}
-                placeholder="Portuguese"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`documentType-${index}`}>Document Type *</Label>
-              <Select
-                value={person.documentType}
-                onValueChange={(value) => updatePerson(index, "documentType", value)}
-                required
-              >
-                <SelectTrigger id={`documentType-${index}`}>
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {documentTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`documentNumber-${index}`}>Document Number *</Label>
-              <Input
-                id={`documentNumber-${index}`}
-                value={person.documentNumber}
-                onChange={(e) => updatePerson(index, "documentNumber", e.target.value)}
-                placeholder="AB123456"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`documentCountry-${index}`}>Document Issuing Country *</Label>
-              <Input
-                id={`documentCountry-${index}`}
-                value={person.documentCountry}
-                onChange={(e) => updatePerson(index, "documentCountry", e.target.value)}
-                placeholder="Portugal"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`checkInDate-${index}`}>Check-in Date *</Label>
-              <Input
-                id={`checkInDate-${index}`}
-                type="date"
-                value={person.checkInDate}
-                onChange={(e) => updatePerson(index, "checkInDate", e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`checkOutDate-${index}`}>Check-out Date *</Label>
-              <Input
-                id={`checkOutDate-${index}`}
-                type="date"
-                value={person.checkOutDate}
-                onChange={(e) => updatePerson(index, "checkOutDate", e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          {index < persons.length - 1 && <Separator className="my-4" />}
-        </div>
-      ))}
-
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addPerson}
-          className="gap-2 w-full sm:w-auto"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Add Another Person
-        </Button>
-
-        <Button type="submit" size="lg" className="w-full sm:w-auto">
-          Submit Information
-        </Button>
-      </div>
-    </form>
-  );
 };
 
 export default GovernmentInformationForm;
