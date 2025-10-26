@@ -68,6 +68,9 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
         const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
         const apiToken = import.meta.env.VITE_API_TOKEN || '';
         
+        console.log('Fetching reservation data for bookingId:', bookingId);
+        console.log('API URL:', `${apiBaseUrl}/api/reservation/${bookingId}`);
+        
         const response = await fetch(`${apiBaseUrl}/api/reservation/${bookingId}`, {
           headers: {
             'x-api-token': apiToken,
@@ -79,16 +82,23 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
         }
 
         const data = await response.json();
+        console.log('Received reservation data:', data);
         
         if (data.data?.reservations?.[0]) {
           const reservation = data.data.reservations[0];
           const guests = reservation.guests || [];
           
+          console.log('Reservation:', reservation);
+          console.log('Guests:', guests);
+          console.log('Number of adults:', reservation.number_of_adults);
+          
           // Pre-populate persons based on number of guests or adults
           const numberOfGuests = Math.max(guests.length, reservation.number_of_adults || 1);
+          console.log('Creating forms for', numberOfGuests, 'guests');
+          
           const newPersons = Array.from({ length: numberOfGuests }, (_, index) => {
             const guest = guests[index];
-            return {
+            const personData = {
               fullName: guest?.name || (index === 0 ? reservation.guest_name : ""),
               birthday: "",
               nationality: guest?.country || "",
@@ -98,9 +108,14 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
               checkInDate: reservation.check_in_date || "",
               checkOutDate: reservation.check_out_date || "",
             };
+            console.log(`Person ${index + 1} data:`, personData);
+            return personData;
           });
           
+          console.log('Setting persons state:', newPersons);
           setPersons(newPersons);
+        } else {
+          console.log('No reservation data found in response');
         }
       } catch (error) {
         console.error('Error fetching reservation:', error);
@@ -117,6 +132,7 @@ const GovernmentInformationForm = ({ bookingId }: GovernmentInformationFormProps
     if (bookingId) {
       fetchReservationData();
     } else {
+      console.log('No bookingId provided');
       setIsLoading(false);
     }
   }, [bookingId, toast]);
