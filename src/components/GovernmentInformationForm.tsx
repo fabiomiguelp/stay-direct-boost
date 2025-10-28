@@ -55,6 +55,7 @@ const countryCodes: { [key: string]: string } = {
 const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformationFormProps) => {
     const {toast} = useToast();
     const [isLoading, setIsLoading] = useState(true);
+    const [errors, setErrors] = useState<{[key: string]: string[]}>({});
     const [persons, setPersons] = useState([
         {
             fullName: "",
@@ -209,6 +210,9 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
         e.preventDefault();
 
         try {
+            // Clear previous errors
+            setErrors({});
+            
             // Validate all persons
             formSchema.parse({persons});
 
@@ -221,6 +225,17 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
             });
         } catch (error) {
             if (error instanceof z.ZodError) {
+                // Build error map
+                const errorMap: {[key: string]: string[]} = {};
+                error.errors.forEach((err) => {
+                    const path = err.path.join('.');
+                    if (!errorMap[path]) {
+                        errorMap[path] = [];
+                    }
+                    errorMap[path].push(err.message);
+                });
+                setErrors(errorMap);
+                
                 toast({
                     title: "Validation error",
                     description: error.errors[0].message,
@@ -269,6 +284,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 onChange={(e) => updatePerson(index, "fullName", e.target.value)}
                                 placeholder="John Doe"
                                 required
+                                className={errors[`persons.${index}.fullName`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -280,6 +296,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 value={person.birthday}
                                 onChange={(e) => updatePerson(index, "birthday", e.target.value)}
                                 required
+                                className={errors[`persons.${index}.birthday`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -291,6 +308,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 onChange={(e) => updatePerson(index, "nationality", e.target.value)}
                                 placeholder="Portuguese"
                                 required
+                                className={errors[`persons.${index}.nationality`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -301,7 +319,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 onValueChange={(value) => updatePerson(index, "documentType", value)}
                                 required
                             >
-                                <SelectTrigger id={`documentType-${index}`}>
+                                <SelectTrigger id={`documentType-${index}`} className={errors[`persons.${index}.documentType`] ? "border-destructive focus-visible:ring-destructive" : ""}>
                                     <SelectValue placeholder="Select document type"/>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -322,6 +340,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 onChange={(e) => updatePerson(index, "documentNumber", e.target.value)}
                                 placeholder="AB123456"
                                 required
+                                className={errors[`persons.${index}.documentNumber`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -333,6 +352,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 onChange={(e) => updatePerson(index, "documentCountry", e.target.value)}
                                 placeholder="Portugal"
                                 required
+                                className={errors[`persons.${index}.documentCountry`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -344,6 +364,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 value={person.checkInDate}
                                 onChange={(e) => updatePerson(index, "checkInDate", e.target.value)}
                                 required
+                                className={errors[`persons.${index}.checkInDate`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
 
@@ -355,6 +376,7 @@ const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformation
                                 value={person.checkOutDate}
                                 onChange={(e) => updatePerson(index, "checkOutDate", e.target.value)}
                                 required
+                                className={errors[`persons.${index}.checkOutDate`] ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                         </div>
                     </div>
