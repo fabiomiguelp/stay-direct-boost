@@ -35,6 +35,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface GovernmentInformationFormProps {
     bookingId: string;
+    xApiToken: string;
 }
 
 const documentTypes = [
@@ -51,7 +52,7 @@ const countryCodes: { [key: string]: string } = {
     // Add more country codes as needed
 };
 
-const GovernmentInformationForm = ({bookingId}: GovernmentInformationFormProps) => {
+const GovernmentInformationForm = ({bookingId, xApiToken}: GovernmentInformationFormProps) => {
     const {toast} = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [persons, setPersons] = useState([
@@ -72,14 +73,14 @@ const GovernmentInformationForm = ({bookingId}: GovernmentInformationFormProps) 
             try {
                 setIsLoading(true);
                 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-                const apiToken = import.meta.env.VITE_API_TOKEN || '';
+
 
                 console.log('Fetching reservation data for bookingId:', bookingId);
                 console.log('API URL:', `${apiBaseUrl}/api/reservation/${bookingId}`);
 
                 const response = await fetch(`${apiBaseUrl}/api/reservation/${bookingId}`, {
                     headers: {
-                        'x-api-token': apiToken,
+                        'x-api-token': xApiToken,
                     },
                 });
 
